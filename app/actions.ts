@@ -7,6 +7,7 @@ import {
   savePreference,
   writeAuditEvent,
 } from "@/lib/recipients";
+import { isClaimLinkRequestAllowed } from "@/lib/rate-limit";
 import { isEvmAddress } from "@/lib/wallet";
 import { env } from "@/lib/env";
 
@@ -41,6 +42,15 @@ export async function requestClaimLink(
   }
 
   try {
+    const allowed = await isClaimLinkRequestAllowed(email);
+
+    if (!allowed) {
+      return {
+        status: "success",
+        message: NEUTRAL_EMAIL_MESSAGE,
+      };
+    }
+
     const recipient = await getRecipientByEmail(email);
 
     if (recipient) {
@@ -128,4 +138,3 @@ export async function saveNftPreference(
     };
   }
 }
-

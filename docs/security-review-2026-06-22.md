@@ -17,29 +17,25 @@ Reviewed:
 
 ## Findings
 
-### P1: Supabase Postgres Is Not Connected From This Environment
+### Resolved After Review: Supabase Runtime API Is Connected
 
-The claim platform depends on `DATABASE_URL`, but the direct Supabase database host is not reachable from the local environment. A connection test failed with `ECONNREFUSED` against the IPv6-only database host. Earlier manual `psql` attempts also failed with the provided password.
+The claim platform now uses the Supabase REST API with the server-only secret key at runtime. The required tables, public verification view, and rate-limit RPC were created through the Supabase pooler.
 
-Impact: migrations cannot be applied, participants cannot be imported, magic-link requests cannot find recipients, PDF downloads cannot load recipients, and NFT preferences cannot be saved.
+The direct database host remains IPv6-only from this environment, but the operational pooler URL works for SQL migrations/imports.
 
-Recommendation: provide a working Supabase pooler connection string or corrected database password. Prefer the pooler for deployed serverless runtimes.
+The active participant import completed with 41 rows.
 
-### P1: Runtime Database URL Appears To Be A Broad Postgres Credential
+### Resolved After Review: Runtime Database URL Removed
 
-The app uses `DATABASE_URL` directly from server runtime. The provided URL is for the `postgres` user. RLS is enabled in the migration, but this does not materially protect the app if it connects as a highly privileged database role.
+The runtime app was changed to use the Supabase REST API with the server-only secret key. The direct Postgres URL is now only for migration/import scripts.
 
-Recommendation: create least-privileged roles:
+The Supabase secret key still bypasses RLS by design, so keep it server-only. Creating custom Postgres roles still requires SQL access or the Supabase SQL editor; it cannot be done with publishable/secret API keys alone.
 
-- claim app role: select recipients by normalized email/id/certificate ID, insert audit events, upsert NFT preferences;
-- verification app role: read-only access to a public verification view;
-- migration/import role: separate operational credential, not used by runtime apps.
+### Resolved After Review: Email Claim Endpoint Has Rate Limiting
 
-### P1: Email Claim Endpoint Has No Abuse Throttling
+`requestClaimLink` now checks a Supabase-backed fixed-window limiter before recipient lookup or Mailgun sending. It limits both hashed email and hashed IP keys.
 
-`requestClaimLink` uses a neutral response, which avoids email enumeration, but it has no rate limiting by IP, email hash, or global volume. An attacker who knows or guesses an eligible email can repeatedly trigger Mailgun messages.
-
-Recommendation: add a real rate limiter before sending Mailgun messages. A small Supabase-backed request table, Redis/Upstash, or a hosted bot-protection service would be appropriate.
+The supporting rate-limit table and RPC are defined in the migrations and still need to be applied through SQL access.
 
 ### P2: Magic Links Are In Query Strings And Are Reused For PDF Downloads
 
@@ -47,17 +43,13 @@ Magic links are intentionally stateless and valid for one hour. The same token i
 
 Recommendation: after the user opens `/claim?token=...`, exchange the token for an HttpOnly, SameSite cookie scoped to the claim site, then remove the token from subsequent links and PDF downloads.
 
-### P2: PDF Asset Loading Trusts Request Origin
+### Resolved After Review: PDF Assets Load From Local Files
 
-The PDF renderer fetches static font/logo assets from `new URL(path, origin)`, where `origin` comes from `request.url`. In managed hosting this is usually stable, but it is still better to base internal asset loading on a configured trusted origin.
+The PDF renderer now reads fonts and logos from local repository files under `public/`. The PDF route includes these files in output tracing.
 
-Recommendation: use a trusted asset origin from environment configuration, or return to local file reads with deployment tracing configured explicitly.
+### Resolved After Review: PostCSS Advisory Fixed
 
-### P2: Dependency Audit Reports A Moderate PostCSS Advisory
-
-`pnpm audit --audit-level moderate` reports `postcss <8.5.10` through `next@16.2.9`.
-
-Recommendation: add a package-manager override to force patched `postcss >=8.5.10`, or upgrade Next once its dependency tree is patched.
+The repo now pins `postcss` to `8.5.15` through a pnpm override. `pnpm audit --audit-level moderate` reports no known vulnerabilities.
 
 ### P3: Coverage Gaps Around Security-Critical Logic
 
@@ -76,5 +68,6 @@ Recommendation: add focused unit tests for these rules before launch.
 - PDF responses use `Cache-Control: private, no-store`.
 - Generated PDFs are not stored.
 - CSV dry run confirmed 41 active participants, excluding 30 no-response and 6 left-program rows.
+- Live import inserted/updated 41 active participants.
 - `pnpm lint`, `pnpm typecheck`, and `pnpm build` pass.
-
+- `pnpm audit --audit-level moderate` passes.

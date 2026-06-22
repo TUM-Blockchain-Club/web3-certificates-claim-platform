@@ -8,7 +8,6 @@ const envSchema = z.object({
     .string()
     .url()
     .default("https://certificates.web3-talents.com"),
-  DATABASE_URL: z.string().min(1),
   MAGIC_LINK_SECRET: z.string().min(32),
   MAILGUN_API_KEY: z.string().min(1),
   MAILGUN_DOMAIN: z.string().min(1),
@@ -18,7 +17,8 @@ const envSchema = z.object({
     .string()
     .url()
     .default("https://claim-platform.web3-talents.com"),
+  SUPABASE_SECRET_KEY: z.string().min(1),
+  SUPABASE_URL: z.string().url(),
 });
 
 export const env = envSchema.parse(process.env);
-

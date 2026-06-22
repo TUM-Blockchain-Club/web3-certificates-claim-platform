@@ -36,6 +36,10 @@ pnpm dev
 
 Required environment variables are documented in `.env.example`. Keep `.env` uncommitted.
 
+The runtime app uses the Supabase REST API with a server-only secret key. The
+Postgres `DATABASE_URL` should be a Supabase pooler URL and is only for
+migration/import scripts.
+
 ## Database
 
 Apply the schema:

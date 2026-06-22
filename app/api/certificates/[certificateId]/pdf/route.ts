@@ -25,8 +25,7 @@ export async function GET(request: Request, { params }: RouteContext) {
     notFound();
   }
 
-  const origin = new URL(request.url).origin;
-  const pdfBytes = await renderCertificatePdf(recipient, origin);
+  const pdfBytes = await renderCertificatePdf(recipient);
   const pdfBody = new ArrayBuffer(pdfBytes.byteLength);
   new Uint8Array(pdfBody).set(pdfBytes);
   const filename = `web3-talents-certificate-${recipient.certificateId}.pdf`;

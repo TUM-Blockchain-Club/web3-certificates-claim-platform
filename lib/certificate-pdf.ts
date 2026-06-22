@@ -1,33 +1,24 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
 import QRCode from "qrcode";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import type { CertificateRecipient } from "@/lib/recipients";
 
 const PAGE_WIDTH = 841.89;
 const PAGE_HEIGHT = 595.28;
 const MARGIN = 42;
+const PUBLIC_DIR = join(/*turbopackIgnore: true*/ process.cwd(), "public");
 const FONT_PATHS = {
-  sans: "/certificate-assets/fonts/DejaVuSans.ttf",
-  sansBold: "/certificate-assets/fonts/DejaVuSans-Bold.ttf",
-  serif: "/certificate-assets/fonts/DejaVuSerif.ttf",
-  serifBold: "/certificate-assets/fonts/DejaVuSerif-Bold.ttf",
+  sans: join(PUBLIC_DIR, "certificate-assets/fonts/DejaVuSans.ttf"),
+  sansBold: join(PUBLIC_DIR, "certificate-assets/fonts/DejaVuSans-Bold.ttf"),
+  serif: join(PUBLIC_DIR, "certificate-assets/fonts/DejaVuSerif.ttf"),
+  serifBold: join(PUBLIC_DIR, "certificate-assets/fonts/DejaVuSerif-Bold.ttf"),
 };
 const IMAGE_PATHS = {
-  tbcLogo: "/tbc-wordmark.png",
-  web3Logo: "/web3-talents-logo.png",
+  tbcLogo: join(PUBLIC_DIR, "tbc-wordmark.png"),
+  web3Logo: join(PUBLIC_DIR, "web3-talents-logo.png"),
 };
-
-async function readPublicAsset(origin: string, path: string) {
-  const response = await fetch(new URL(path, origin), {
-    cache: "force-cache",
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to load PDF asset: ${path}`);
-  }
-
-  return new Uint8Array(await response.arrayBuffer());
-}
 
 function centerText(page: ReturnType<PDFDocument["addPage"]>, text: string, options: {
   color?: ReturnType<typeof rgb>;
@@ -47,7 +38,6 @@ function centerText(page: ReturnType<PDFDocument["addPage"]>, text: string, opti
 
 export async function renderCertificatePdf(
   recipient: CertificateRecipient,
-  origin: string,
 ) {
   const pdfDoc = await PDFDocument.create();
   pdfDoc.registerFontkit(fontkit);
@@ -60,12 +50,12 @@ export async function renderCertificatePdf(
     web3LogoBytes,
     tbcLogoBytes,
   ] = await Promise.all([
-    readPublicAsset(origin, FONT_PATHS.sans),
-    readPublicAsset(origin, FONT_PATHS.sansBold),
-    readPublicAsset(origin, FONT_PATHS.serif),
-    readPublicAsset(origin, FONT_PATHS.serifBold),
-    readPublicAsset(origin, IMAGE_PATHS.web3Logo),
-    readPublicAsset(origin, IMAGE_PATHS.tbcLogo),
+    readFile(/*turbopackIgnore: true*/ FONT_PATHS.sans),
+    readFile(/*turbopackIgnore: true*/ FONT_PATHS.sansBold),
+    readFile(/*turbopackIgnore: true*/ FONT_PATHS.serif),
+    readFile(/*turbopackIgnore: true*/ FONT_PATHS.serifBold),
+    readFile(/*turbopackIgnore: true*/ IMAGE_PATHS.web3Logo),
+    readFile(/*turbopackIgnore: true*/ IMAGE_PATHS.tbcLogo),
   ]);
 
   const sans = await pdfDoc.embedFont(sansFontBytes);

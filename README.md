@@ -40,6 +40,9 @@ The runtime app uses the Supabase REST API with a server-only secret key. The
 Postgres `DATABASE_URL` should be a Supabase pooler URL and is only for
 migration/import scripts.
 
+Certificate name, cohort, and issue date are stored per recipient in Supabase.
+New participant imports use database defaults for those fields.
+
 ## Database
 
 Apply the schema:

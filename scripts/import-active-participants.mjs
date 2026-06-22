@@ -16,12 +16,7 @@ if (!csvPath) {
   process.exit(1);
 }
 
-const requiredEnv = [
-  "DATABASE_URL",
-  "CERTIFICATE_NAME",
-  "CERTIFICATE_COHORT",
-  "CERTIFICATE_ISSUED_ON",
-];
+const requiredEnv = ["DATABASE_URL"];
 
 for (const key of requiredEnv) {
   if (!process.env[key]) {
@@ -86,32 +81,23 @@ try {
       await tx`
         insert into public.certificate_recipients (
           certificate_id,
-          cohort,
-          certificate_name,
           participant_name,
           email,
           email_normalized,
-          source_status,
-          certificate_issued_on
+          source_status
         )
         values (
           ${createCertificateId()},
-          ${process.env.CERTIFICATE_COHORT},
-          ${process.env.CERTIFICATE_NAME},
           ${row.name},
           ${row.email},
           ${normalizeEmail(row.email)},
-          'Active (YES)',
-          ${process.env.CERTIFICATE_ISSUED_ON}
+          'Active (YES)'
         )
         on conflict (email_normalized)
         do update set
-          cohort = excluded.cohort,
-          certificate_name = excluded.certificate_name,
           participant_name = excluded.participant_name,
           email = excluded.email,
           source_status = excluded.source_status,
-          certificate_issued_on = excluded.certificate_issued_on,
           verification_active = true,
           updated_at = now()
       `;

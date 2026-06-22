@@ -1,9 +1,6 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  CERTIFICATE_COHORT: z.string().min(1).default("Cohort 1"),
-  CERTIFICATE_ISSUED_ON: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  CERTIFICATE_NAME: z.string().min(1).default("Web3 Talents Certificate"),
   CERTIFICATES_BASE_URL: z
     .string()
     .url()

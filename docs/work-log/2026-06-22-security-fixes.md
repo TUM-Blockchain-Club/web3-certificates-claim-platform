@@ -12,6 +12,8 @@
 - Changed PDF generation back to local repository file reads for fonts/logos.
 - Added output tracing includes for PDF assets.
 - Added a pnpm override for `postcss@8.5.15`.
+- Removed certificate metadata from runtime environment variables. New imports
+  now use Supabase defaults for certificate name, cohort, and issue date.
 
 ## Rate Limiter
 
@@ -29,4 +31,3 @@ addresses and IP addresses are not stored in the rate-limit table.
 - `pnpm import:participants`
 - Supabase REST checks for the public verification view, recipient table, and rate-limit RPC.
 - `pnpm audit --audit-level moderate`
-

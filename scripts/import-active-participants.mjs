@@ -6,7 +6,10 @@ import { readFile } from "node:fs/promises";
 import { parse } from "csv-parse/sync";
 import postgres from "postgres";
 
-const csvPath = process.argv[2];
+const dryRun = process.argv.includes("--dry-run");
+const csvPath = process.argv.find(
+  (arg, index) => index > 1 && arg !== "--dry-run" && arg !== "--",
+);
 
 if (!csvPath) {
   console.error("Usage: pnpm import:participants -- /absolute/path/to/file.csv");
@@ -42,6 +45,13 @@ const rows = parse(content, {
 });
 
 const participantRows = rows.slice(2);
+const statusCounts = new Map();
+
+for (const row of participantRows) {
+  const status = String(row[1] ?? "").trim() || "(blank)";
+  statusCounts.set(status, (statusCounts.get(status) ?? 0) + 1);
+}
+
 const activeRows = participantRows
   .map((row) => ({
     email: String(row[2] ?? "").trim(),
@@ -49,6 +59,16 @@ const activeRows = participantRows
     status: String(row[1] ?? "").trim(),
   }))
   .filter((row) => row.status === "Active (YES)" && row.name && row.email);
+
+if (dryRun) {
+  console.log(`Active participants: ${activeRows.length}`);
+  console.log(
+    [...statusCounts.entries()]
+      .map(([status, count]) => `${status}: ${count}`)
+      .join("\n"),
+  );
+  process.exit(0);
+}
 
 const sql = postgres(process.env.DATABASE_URL, {
   connect_timeout: 10,
@@ -116,4 +136,3 @@ try {
 }
 
 console.log(`Imported ${insertedOrUpdated} active participants.`);
-

@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "psql \"$DATABASE_URL\" -f supabase/migrations/202606220001_create_certificate_tables.sql",
+    "db:migrate": "node scripts/run-migration.mjs",
     "import:participants": "node scripts/import-active-participants.mjs"
   },
   "dependencies": {

@@ -52,10 +52,15 @@ pnpm import:participants -- "/absolute/path/to/Cohort_Jan2026_Management_Sheet.x
 
 Only rows whose status column is `Active (YES)` are imported.
 
+Preview the CSV selection without touching the database:
+
+```bash
+pnpm import:participants -- --dry-run "/absolute/path/to/Cohort_Jan2026_Management_Sheet.xlsx - All Participants NEW.csv"
+```
+
 ## Checks
 
 ```bash
 pnpm typecheck
 pnpm build
 ```
-

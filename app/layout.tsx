@@ -17,8 +17,8 @@ const body = IBM_Plex_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Claim Web3 Talents Certificate",
-    template: "%s | Web3 Talents Certificates",
+    default: "Web3 Certificate",
+    template: "%s | Web3 Certificate",
   },
   description: "Claim a Web3 Talents certificate and submit a TBC NFT destination.",
 };
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f6f1e8",
+  themeColor: "#03000b",
 };
 
 export default function RootLayout({
@@ -39,7 +39,7 @@ export default function RootLayout({
       <body>
         <div className="shell">
           <header className="topbar">
-            <Link href="/">
+            <Link className="brand-lockup" href="/">
               <Image
                 className="brand-mark"
                 src="/web3-talents-logo.png"

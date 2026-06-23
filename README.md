@@ -2,6 +2,8 @@
 
 Temporary claim platform for Web3 Talents cohort 1 certificates.
 
+Site name: `Web3 Certificate`
+
 Production domain:
 
 ```text

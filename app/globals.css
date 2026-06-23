@@ -1,16 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #161616;
-  --muted: #636057;
-  --paper: #f6f1e8;
-  --panel: #fffdf7;
-  --line: #d8cab7;
-  --forest: #0e6f5c;
-  --forest-deep: #084a3d;
-  --brick: #ae4a2b;
-  --gold: #d7aa52;
-  --danger: #a1382b;
+  --background: #03000b;
+  --foreground: #ffffff;
+  --muted: #c0bbd6;
+  --muted-strong: #e7d8ff;
+  --panel: #1a1329;
+  --panel-strong: #1e1531;
+  --field: rgba(3, 0, 11, 0.52);
+  --line: rgba(194, 159, 255, 0.26);
+  --line-strong: rgba(194, 159, 255, 0.48);
+  --accent: #672eb3;
+  --accent-hover: #7b34d6;
+  --accent-light: #c29fff;
+  --accent-faint: rgba(103, 46, 179, 0.24);
+  --success: #84f2bf;
+  --danger: #ffb4a8;
+  --logo-tile: #fdfcff;
 }
 
 * {
@@ -19,19 +25,18 @@
 
 html {
   min-height: 100%;
-  background: var(--paper);
+  background: var(--background);
 }
 
 body {
   min-height: 100%;
   margin: 0;
-  color: var(--ink);
+  color: var(--foreground);
   background:
-    radial-gradient(circle at 18% 12%, rgba(215, 170, 82, 0.18), transparent 30%),
-    linear-gradient(90deg, rgba(22, 22, 22, 0.045) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(22, 22, 22, 0.035) 1px, transparent 1px),
-    var(--paper);
-  background-size: auto, 38px 38px, 38px 38px;
+    linear-gradient(122deg, rgba(103, 46, 179, 0.32), transparent 34%),
+    linear-gradient(236deg, rgba(194, 159, 255, 0.18), transparent 40%),
+    linear-gradient(180deg, #03000b 0%, #12071f 52%, #03000b 100%);
+  background-attachment: fixed;
 }
 
 body,
@@ -52,6 +57,24 @@ input {
 .shell {
   min-height: 100vh;
   padding: 28px;
+  position: relative;
+}
+
+.shell::before {
+  background-image:
+    linear-gradient(rgba(194, 159, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(194, 159, 255, 0.08) 1px, transparent 1px);
+  background-size: 42px 42px;
+  content: "";
+  inset: 0;
+  opacity: 0.34;
+  pointer-events: none;
+  position: fixed;
+}
+
+.shell > * {
+  position: relative;
+  z-index: 1;
 }
 
 .topbar {
@@ -63,14 +86,24 @@ input {
   max-width: 1120px;
 }
 
+.brand-lockup {
+  align-items: center;
+  background: var(--logo-tile);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  display: flex;
+  padding: 9px 12px;
+  box-shadow: 0 18px 50px rgba(3, 0, 11, 0.28);
+}
+
 .brand-mark {
   height: auto;
-  width: min(230px, 50vw);
+  width: min(220px, 44vw);
 }
 
 .club-mark {
   height: auto;
-  opacity: 0.76;
+  opacity: 0.94;
   width: 146px;
 }
 
@@ -89,7 +122,7 @@ input {
 
 .intro-panel,
 .form-panel {
-  background: var(--panel);
+  background: linear-gradient(180deg, rgba(36, 19, 74, 0.9), rgba(26, 19, 41, 0.96));
   border: 1px solid var(--line);
 }
 
@@ -102,12 +135,12 @@ input {
 }
 
 .form-panel {
-  box-shadow: 0 18px 70px rgba(51, 38, 18, 0.13);
+  box-shadow: 0 24px 80px rgba(3, 0, 11, 0.36);
   padding: clamp(28px, 5vw, 56px);
 }
 
 .kicker {
-  color: var(--brick);
+  color: var(--accent-light);
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -188,24 +221,24 @@ h2 {
 }
 
 .field input {
-  background: #fffaf0;
+  background: var(--field);
   border: 1px solid var(--line);
-  color: var(--ink);
+  color: var(--foreground);
   min-height: 54px;
   padding: 0 16px;
   width: 100%;
 }
 
 .field input:focus {
-  border-color: var(--forest);
-  outline: 2px solid rgba(14, 111, 92, 0.2);
+  border-color: var(--accent-light);
+  outline: 2px solid rgba(194, 159, 255, 0.24);
   outline-offset: 1px;
 }
 
 .button {
   align-items: center;
-  background: var(--ink);
-  border: 1px solid var(--ink);
+  background: var(--accent);
+  border: 1px solid var(--accent);
   color: white;
   cursor: pointer;
   display: inline-flex;
@@ -219,7 +252,17 @@ h2 {
 
 .button.secondary {
   background: transparent;
-  color: var(--ink);
+  color: var(--foreground);
+}
+
+.button:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.button.secondary:hover {
+  background: var(--accent-faint);
+  border-color: var(--line-strong);
 }
 
 .button:disabled {
@@ -235,8 +278,8 @@ h2 {
 }
 
 .notice.success {
-  border-color: color-mix(in srgb, var(--forest) 42%, white);
-  color: var(--forest-deep);
+  border-color: rgba(132, 242, 191, 0.5);
+  color: var(--success);
 }
 
 .notice.error {
@@ -245,9 +288,9 @@ h2 {
 }
 
 .claim-card {
-  background: var(--panel);
+  background: linear-gradient(180deg, rgba(36, 19, 74, 0.9), rgba(26, 19, 41, 0.96));
   border: 1px solid var(--line);
-  box-shadow: 0 18px 70px rgba(51, 38, 18, 0.13);
+  box-shadow: 0 24px 80px rgba(3, 0, 11, 0.36);
   display: grid;
   gap: 32px;
   padding: clamp(28px, 5vw, 56px);
@@ -260,7 +303,7 @@ h2 {
 }
 
 .summary-row {
-  background: var(--panel);
+  background: rgba(3, 0, 11, 0.46);
   display: grid;
   gap: 8px;
   grid-template-columns: 150px 1fr;
@@ -290,7 +333,7 @@ h2 {
 
 .radio-option {
   align-items: flex-start;
-  background: #fffaf0;
+  background: var(--field);
   border: 1px solid var(--line);
   cursor: pointer;
   display: grid;
@@ -350,4 +393,3 @@ h2 {
     grid-template-columns: 1fr;
   }
 }
-

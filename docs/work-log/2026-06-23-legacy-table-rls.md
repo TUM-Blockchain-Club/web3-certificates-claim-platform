@@ -29,16 +29,25 @@ The migration:
 - enables RLS on `web3_talents` and `web3_mentors`;
 - revokes direct `anon` and `authenticated` table privileges.
 
-No legacy rows were deleted.
+No legacy rows were deleted in this first step.
+
+After confirming the maintained certificate flow does not need the legacy
+prototype tables, added and applied migration
+`202606230003_drop_legacy_web3_tables.sql`.
+
+The deletion migration removes:
+
+- `web3_talents`
+- `web3_mentors`
 
 ## Verification
 
 After applying the migration:
 
+- only maintained certificate tables remain in `public`;
 - every table in `public` has RLS enabled;
-- `web3_talents` and `web3_mentors` deny publishable-key access;
+- `web3_talents` and `web3_mentors` no longer exist;
 - `certificate_public_verifications` remains publicly readable as intended.
 
 The remaining non-RLS tables are Supabase-managed tables in `auth`, `realtime`,
 and `vault`, not project-owned application tables.
-

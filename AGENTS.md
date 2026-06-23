@@ -20,6 +20,7 @@
 - Do not commit `.env`, Supabase credentials, Mailgun keys, participant CSVs, or generated PDFs.
 - Keep generated PDFs on demand only.
 - Runtime app code should use the Supabase API client, not a direct Postgres connection. Keep `DATABASE_URL` for migration/import scripts only.
+- Legacy prototype tables `web3_talents` and `web3_mentors` may exist in Supabase, but they are not used by this maintained certificate flow and should stay locked down with RLS.
 - Keep magic links stateless and signed; do not add a token table unless requirements change.
 - Keep link validity at one hour.
 - Do not expose whether an email address exists in the public request flow.

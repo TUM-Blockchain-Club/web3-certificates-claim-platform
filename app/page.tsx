@@ -1,13 +1,15 @@
 import { Mail } from "lucide-react";
 import { EmailRequestForm } from "@/app/_components/email-request-form";
 
+const PROGRAM_LABEL = "Blockchain Fundamentals 1";
+
 export default function Home() {
   return (
     <main className="page">
       <section className="claim-grid">
         <div className="intro-panel">
           <div>
-            <p className="kicker">Cohort 1</p>
+            <p className="kicker">{PROGRAM_LABEL}</p>
             <h1>Claim your Web3 Certificate.</h1>
             <p className="lead">
               Receive a secure link, download the certificate, and record your

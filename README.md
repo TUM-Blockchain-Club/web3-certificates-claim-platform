@@ -1,6 +1,6 @@
 # Web3 Certificates Claim Platform
 
-Temporary claim platform for Web3 Talents cohort 1 certificates.
+Temporary claim platform for Web3 Talents Blockchain Fundamentals 1 certificates.
 
 Site name: `Web3 Certificate`
 

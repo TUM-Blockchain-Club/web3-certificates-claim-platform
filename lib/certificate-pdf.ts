@@ -74,15 +74,18 @@ export async function renderCertificatePdf(
   );
 
   const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-  const ink = rgb(0.08, 0.08, 0.08);
-  const muted = rgb(0.38, 0.36, 0.32);
-  const green = rgb(0.05, 0.42, 0.35);
-  const brick = rgb(0.66, 0.27, 0.16);
-  const paper = rgb(0.98, 0.96, 0.91);
-  const line = rgb(0.82, 0.75, 0.65);
+  const background = rgb(0.012, 0, 0.043);
+  const panel = rgb(0.102, 0.075, 0.161);
+  const panelStrong = rgb(0.118, 0.082, 0.192);
+  const foreground = rgb(1, 1, 1);
+  const muted = rgb(0.753, 0.733, 0.839);
+  const mutedStrong = rgb(0.906, 0.847, 1);
+  const accent = rgb(0.404, 0.18, 0.702);
+  const accentLight = rgb(0.761, 0.624, 1);
+  const logoTile = rgb(0.992, 0.988, 1);
 
   page.drawRectangle({
-    color: paper,
+    color: background,
     height: PAGE_HEIGHT,
     width: PAGE_WIDTH,
     x: 0,
@@ -90,8 +93,7 @@ export async function renderCertificatePdf(
   });
 
   page.drawRectangle({
-    borderColor: line,
-    borderWidth: 1.2,
+    color: panel,
     height: PAGE_HEIGHT - MARGIN * 2,
     width: PAGE_WIDTH - MARGIN * 2,
     x: MARGIN,
@@ -99,21 +101,36 @@ export async function renderCertificatePdf(
   });
 
   page.drawRectangle({
-    borderColor: green,
-    borderWidth: 2,
+    borderColor: accent,
+    borderWidth: 2.2,
     height: PAGE_HEIGHT - MARGIN * 2 - 18,
     width: PAGE_WIDTH - MARGIN * 2 - 18,
     x: MARGIN + 9,
     y: MARGIN + 9,
   });
 
+  page.drawRectangle({
+    color: panelStrong,
+    height: 102,
+    width: PAGE_WIDTH - MARGIN * 2 - 36,
+    x: MARGIN + 18,
+    y: PAGE_HEIGHT - MARGIN - 120,
+  });
+
   const web3LogoWidth = 174;
   const web3LogoHeight = web3LogoWidth * (web3Logo.height / web3Logo.width);
+  page.drawRectangle({
+    color: logoTile,
+    height: web3LogoHeight + 22,
+    width: web3LogoWidth + 28,
+    x: MARGIN + 28,
+    y: PAGE_HEIGHT - MARGIN - 68,
+  });
   page.drawImage(web3Logo, {
     height: web3LogoHeight,
     width: web3LogoWidth,
-    x: MARGIN + 34,
-    y: PAGE_HEIGHT - MARGIN - 56,
+    x: MARGIN + 42,
+    y: PAGE_HEIGHT - MARGIN - 57,
   });
 
   const tbcLogoWidth = 120;
@@ -126,7 +143,7 @@ export async function renderCertificatePdf(
   });
 
   centerText(page, recipient.certificateName, {
-    color: brick,
+    color: accentLight,
     font: sansBold,
     size: 14,
     y: 430,
@@ -140,24 +157,32 @@ export async function renderCertificatePdf(
   });
 
   centerText(page, recipient.participantName, {
-    color: ink,
+    color: foreground,
     font: serifBold,
     size: Math.min(54, Math.max(32, 720 / Math.max(recipient.participantName.length, 12))),
     y: 326,
   });
 
   centerText(page, "for successfully completing Web3 Talents", {
-    color: ink,
+    color: foreground,
     font: serif,
     size: 22,
     y: 282,
   });
 
   centerText(page, recipient.cohort, {
-    color: green,
+    color: accentLight,
     font: sansBold,
     size: 16,
     y: 248,
+  });
+
+  page.drawRectangle({
+    color: accent,
+    height: 2,
+    width: 180,
+    x: (PAGE_WIDTH - 180) / 2,
+    y: 228,
   });
 
   page.drawText(`Issued ${recipient.issuedOn}`, {
@@ -185,27 +210,37 @@ export async function renderCertificatePdf(
   });
 
   const qrSize = 86;
+  const qrX = PAGE_WIDTH - MARGIN - 36 - qrSize;
+  const qrY = MARGIN + 34;
+  page.drawRectangle({
+    color: logoTile,
+    height: qrSize + 14,
+    width: qrSize + 14,
+    x: qrX - 7,
+    y: qrY - 7,
+  });
   page.drawImage(qrCode, {
     height: qrSize,
     width: qrSize,
-    x: PAGE_WIDTH - MARGIN - 36 - qrSize,
-    y: MARGIN + 34,
+    x: qrX,
+    y: qrY,
   });
 
   page.drawText("Verify", {
-    color: green,
+    color: accentLight,
     font: sansBold,
     size: 10,
-    x: PAGE_WIDTH - MARGIN - 36 - qrSize,
+    x: qrX,
     y: MARGIN + 22,
   });
 
   const verificationText = recipient.verificationUrl.replace("https://", "");
+  const verificationTextWidth = sans.widthOfTextAtSize(verificationText, 8);
   page.drawText(verificationText, {
-    color: muted,
+    color: mutedStrong,
     font: sans,
     size: 8,
-    x: PAGE_WIDTH - MARGIN - 36 - qrSize - 118,
+    x: Math.max(MARGIN + 36, qrX - 24 - verificationTextWidth),
     y: MARGIN + 22,
   });
 

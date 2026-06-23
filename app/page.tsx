@@ -8,7 +8,7 @@ export default function Home() {
         <div className="intro-panel">
           <div>
             <p className="kicker">Cohort 1</p>
-            <h1>Claim your Web3 Talents certificate.</h1>
+            <h1>Claim your Web3 Certificate.</h1>
             <p className="lead">
               Receive a secure link, download the certificate, and record your
               TBC NFT destination.
@@ -36,4 +36,3 @@ export default function Home() {
     </main>
   );
 }
-

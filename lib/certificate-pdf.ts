@@ -5,9 +5,6 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { CertificateRecipient } from "@/lib/recipients";
 
-const PAGE_WIDTH = 841.89;
-const PAGE_HEIGHT = 595.28;
-const MARGIN = 42;
 const PUBLIC_DIR = join(/*turbopackIgnore: true*/ process.cwd(), "public");
 const FONT_PATHS = {
   sans: join(PUBLIC_DIR, "certificate-assets/fonts/DejaVuSans.ttf"),
@@ -17,21 +14,52 @@ const FONT_PATHS = {
 };
 const IMAGE_PATHS = {
   tbcLogo: join(PUBLIC_DIR, "tbc-wordmark.png"),
-  web3Logo: join(PUBLIC_DIR, "web3-talents-logo.png"),
+};
+const TEMPLATE_PATHS = {
+  certificate: join(
+    PUBLIC_DIR,
+    "certificate-assets/templates/web3-talents-certificate-template.pdf",
+  ),
 };
 
-function centerText(page: ReturnType<PDFDocument["addPage"]>, text: string, options: {
+function centerText(page: ReturnType<PDFDocument["getPage"]>, text: string, options: {
   color?: ReturnType<typeof rgb>;
   font: Awaited<ReturnType<PDFDocument["embedFont"]>>;
+  maxWidth?: number;
+  size: number;
+  width: number;
+  y: number;
+}) {
+  const size = options.maxWidth
+    ? Math.min(
+        options.size,
+        (options.maxWidth / options.font.widthOfTextAtSize(text, options.size)) *
+          options.size,
+      )
+    : options.size;
+  const width = options.font.widthOfTextAtSize(text, size);
+  page.drawText(text, {
+    color: options.color ?? rgb(0.09, 0.09, 0.09),
+    font: options.font,
+    size,
+    x: (options.width - width) / 2,
+    y: options.y,
+  });
+}
+
+function rightText(page: ReturnType<PDFDocument["getPage"]>, text: string, options: {
+  color?: ReturnType<typeof rgb>;
+  font: Awaited<ReturnType<PDFDocument["embedFont"]>>;
+  rightX: number;
   size: number;
   y: number;
 }) {
   const width = options.font.widthOfTextAtSize(text, options.size);
   page.drawText(text, {
-    color: options.color ?? rgb(0.09, 0.09, 0.09),
+    color: options.color,
     font: options.font,
     size: options.size,
-    x: (PAGE_WIDTH - width) / 2,
+    x: options.rightX - width,
     y: options.y,
   });
 }
@@ -39,7 +67,8 @@ function centerText(page: ReturnType<PDFDocument["addPage"]>, text: string, opti
 export async function renderCertificatePdf(
   recipient: CertificateRecipient,
 ) {
-  const pdfDoc = await PDFDocument.create();
+  const templateBytes = await readFile(/*turbopackIgnore: true*/ TEMPLATE_PATHS.certificate);
+  const pdfDoc = await PDFDocument.load(templateBytes);
   pdfDoc.registerFontkit(fontkit);
 
   const [
@@ -47,14 +76,12 @@ export async function renderCertificatePdf(
     sansBoldFontBytes,
     serifFontBytes,
     serifBoldFontBytes,
-    web3LogoBytes,
     tbcLogoBytes,
   ] = await Promise.all([
     readFile(/*turbopackIgnore: true*/ FONT_PATHS.sans),
     readFile(/*turbopackIgnore: true*/ FONT_PATHS.sansBold),
     readFile(/*turbopackIgnore: true*/ FONT_PATHS.serif),
     readFile(/*turbopackIgnore: true*/ FONT_PATHS.serifBold),
-    readFile(/*turbopackIgnore: true*/ IMAGE_PATHS.web3Logo),
     readFile(/*turbopackIgnore: true*/ IMAGE_PATHS.tbcLogo),
   ]);
 
@@ -62,7 +89,6 @@ export async function renderCertificatePdf(
   const sansBold = await pdfDoc.embedFont(sansBoldFontBytes);
   const serif = await pdfDoc.embedFont(serifFontBytes);
   const serifBold = await pdfDoc.embedFont(serifBoldFontBytes);
-  const web3Logo = await pdfDoc.embedPng(web3LogoBytes);
   const tbcLogo = await pdfDoc.embedPng(tbcLogoBytes);
   const qrCodeDataUrl = await QRCode.toDataURL(recipient.verificationUrl, {
     errorCorrectionLevel: "M",
@@ -73,10 +99,8 @@ export async function renderCertificatePdf(
     Buffer.from(qrCodeDataUrl.split(",")[1] ?? "", "base64"),
   );
 
-  const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-  const background = rgb(0.012, 0, 0.043);
-  const panel = rgb(0.102, 0.075, 0.161);
-  const panelStrong = rgb(0.118, 0.082, 0.192);
+  const page = pdfDoc.getPage(0);
+  const { width: pageWidth, height: pageHeight } = page.getSize();
   const foreground = rgb(1, 1, 1);
   const muted = rgb(0.753, 0.733, 0.839);
   const mutedStrong = rgb(0.906, 0.847, 1);
@@ -84,140 +108,97 @@ export async function renderCertificatePdf(
   const accentLight = rgb(0.761, 0.624, 1);
   const logoTile = rgb(0.992, 0.988, 1);
 
-  page.drawRectangle({
-    color: background,
-    height: PAGE_HEIGHT,
-    width: PAGE_WIDTH,
-    x: 0,
-    y: 0,
-  });
-
-  page.drawRectangle({
-    color: panel,
-    height: PAGE_HEIGHT - MARGIN * 2,
-    width: PAGE_WIDTH - MARGIN * 2,
-    x: MARGIN,
-    y: MARGIN,
-  });
-
-  page.drawRectangle({
-    borderColor: accent,
-    borderWidth: 2.2,
-    height: PAGE_HEIGHT - MARGIN * 2 - 18,
-    width: PAGE_WIDTH - MARGIN * 2 - 18,
-    x: MARGIN + 9,
-    y: MARGIN + 9,
-  });
-
-  page.drawRectangle({
-    color: panelStrong,
-    height: 102,
-    width: PAGE_WIDTH - MARGIN * 2 - 36,
-    x: MARGIN + 18,
-    y: PAGE_HEIGHT - MARGIN - 120,
-  });
-
-  const web3LogoWidth = 174;
-  const web3LogoHeight = web3LogoWidth * (web3Logo.height / web3Logo.width);
-  page.drawRectangle({
-    color: logoTile,
-    height: web3LogoHeight + 22,
-    width: web3LogoWidth + 28,
-    x: MARGIN + 28,
-    y: PAGE_HEIGHT - MARGIN - 68,
-  });
-  page.drawImage(web3Logo, {
-    height: web3LogoHeight,
-    width: web3LogoWidth,
-    x: MARGIN + 42,
-    y: PAGE_HEIGHT - MARGIN - 57,
-  });
-
-  const tbcLogoWidth = 120;
+  const tbcLogoWidth = 500;
   const tbcLogoHeight = tbcLogoWidth * (tbcLogo.height / tbcLogo.width);
   page.drawImage(tbcLogo, {
     height: tbcLogoHeight,
     width: tbcLogoWidth,
-    x: PAGE_WIDTH - MARGIN - 34 - tbcLogoWidth,
-    y: PAGE_HEIGHT - MARGIN - 50,
+    x: pageWidth - 670,
+    y: pageHeight - 520,
   });
 
   centerText(page, recipient.certificateName, {
     color: accentLight,
     font: sansBold,
-    size: 14,
-    y: 430,
+    size: 100,
+    width: pageWidth,
+    y: 2340,
   });
 
   centerText(page, "awarded to", {
     color: muted,
     font: sans,
-    size: 18,
-    y: 388,
+    size: 116,
+    width: pageWidth,
+    y: 2075,
   });
 
   centerText(page, recipient.participantName, {
     color: foreground,
     font: serifBold,
-    size: Math.min(54, Math.max(32, 720 / Math.max(recipient.participantName.length, 12))),
-    y: 326,
+    maxWidth: pageWidth - 1050,
+    size: Math.min(330, Math.max(190, 4200 / Math.max(recipient.participantName.length, 12))),
+    width: pageWidth,
+    y: 1665,
   });
 
   centerText(page, "for successfully completing Web3 Talents", {
     color: foreground,
     font: serif,
-    size: 22,
-    y: 282,
+    size: 150,
+    width: pageWidth,
+    y: 1390,
   });
 
   centerText(page, recipient.cohort, {
     color: accentLight,
     font: sansBold,
-    size: 16,
-    y: 248,
+    size: 112,
+    width: pageWidth,
+    y: 1185,
   });
 
   page.drawRectangle({
     color: accent,
-    height: 2,
-    width: 180,
-    x: (PAGE_WIDTH - 180) / 2,
-    y: 228,
+    height: 8,
+    width: 560,
+    x: (pageWidth - 560) / 2,
+    y: 1062,
   });
 
   page.drawText(`Issued ${recipient.issuedOn}`, {
     color: muted,
     font: sans,
-    size: 12,
-    x: MARGIN + 36,
-    y: MARGIN + 65,
+    size: 64,
+    x: 330,
+    y: 610,
   });
 
   page.drawText("Issued by Tum Blockchain Club", {
     color: muted,
     font: sans,
-    size: 12,
-    x: MARGIN + 36,
-    y: MARGIN + 43,
+    size: 58,
+    x: 330,
+    y: 475,
   });
 
   page.drawText(`Certificate ID: ${recipient.certificateId}`, {
     color: muted,
     font: sans,
-    size: 10,
-    x: MARGIN + 36,
-    y: MARGIN + 22,
+    size: 45,
+    x: 330,
+    y: 355,
   });
 
-  const qrSize = 86;
-  const qrX = PAGE_WIDTH - MARGIN - 36 - qrSize;
-  const qrY = MARGIN + 34;
+  const qrSize = 440;
+  const qrX = pageWidth - 760;
+  const qrY = 405;
   page.drawRectangle({
     color: logoTile,
-    height: qrSize + 14,
-    width: qrSize + 14,
-    x: qrX - 7,
-    y: qrY - 7,
+    height: qrSize + 54,
+    width: qrSize + 54,
+    x: qrX - 27,
+    y: qrY - 27,
   });
   page.drawImage(qrCode, {
     height: qrSize,
@@ -226,22 +207,23 @@ export async function renderCertificatePdf(
     y: qrY,
   });
 
-  page.drawText("Verify", {
+  const scanLabel = "Scan to verify";
+  const scanLabelSize = 62;
+  page.drawText(scanLabel, {
     color: accentLight,
     font: sansBold,
-    size: 10,
-    x: qrX,
-    y: MARGIN + 22,
+    size: scanLabelSize,
+    x: qrX + (qrSize - sansBold.widthOfTextAtSize(scanLabel, scanLabelSize)) / 2,
+    y: qrY + qrSize + 105,
   });
 
   const verificationText = recipient.verificationUrl.replace("https://", "");
-  const verificationTextWidth = sans.widthOfTextAtSize(verificationText, 8);
-  page.drawText(verificationText, {
+  rightText(page, verificationText, {
     color: mutedStrong,
     font: sans,
-    size: 8,
-    x: Math.max(MARGIN + 36, qrX - 24 - verificationTextWidth),
-    y: MARGIN + 22,
+    rightX: qrX + qrSize,
+    size: 36,
+    y: 275,
   });
 
   pdfDoc.setTitle(`${recipient.certificateName} - ${recipient.participantName}`);

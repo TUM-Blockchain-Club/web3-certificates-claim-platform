@@ -42,10 +42,10 @@ export default function RootLayout({
             <Link className="brand-lockup" href="/">
               <Image
                 className="brand-mark"
-                src="/web3-talents-logo.png"
+                src="/web3-talents-logo-white.png"
                 alt="Web3 Talents"
-                width={920}
-                height={236}
+                width={1664}
+                height={310}
                 priority
               />
             </Link>

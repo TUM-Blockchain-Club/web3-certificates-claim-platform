@@ -13,7 +13,7 @@ The claim platform owns the shared Supabase schema for certificates.
 `cohort`, `certificate_name`, and `certificate_issued_on` live on each
 recipient row. New imports rely on Supabase defaults:
 
-- `cohort`: `Cohort 1`
+- `cohort`: `Blockchain Fundamentals 1`
 - `certificate_name`: `Web3 Talents Certificate`
 - `certificate_issued_on`: `current_date` at first insert
 

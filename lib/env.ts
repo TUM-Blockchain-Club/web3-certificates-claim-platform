@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const envSchema = z.object({
+const envSchema = {
   CERTIFICATES_BASE_URL: z
     .string()
     .url()
@@ -16,6 +16,20 @@ const envSchema = z.object({
     .default("https://claim-platform.web3-talents.com"),
   SUPABASE_SECRET_KEY: z.string().min(1),
   SUPABASE_URL: z.string().url(),
-});
+} satisfies Record<string, z.ZodType>;
 
-export const env = envSchema.parse(process.env);
+type Env = {
+  [Key in keyof typeof envSchema]: z.infer<(typeof envSchema)[Key]>;
+};
+
+export const env = new Proxy({} as Env, {
+  get(_target, property) {
+    if (typeof property !== "string" || !(property in envSchema)) {
+      return undefined;
+    }
+
+    return envSchema[property as keyof typeof envSchema].parse(
+      process.env[property],
+    );
+  },
+});

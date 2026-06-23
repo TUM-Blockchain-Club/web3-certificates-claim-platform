@@ -16,7 +16,6 @@
   --accent-faint: rgba(103, 46, 179, 0.24);
   --success: #84f2bf;
   --danger: #ffb4a8;
-  --logo-tile: #fdfcff;
 }
 
 * {
@@ -88,17 +87,12 @@ input {
 
 .brand-lockup {
   align-items: center;
-  background: var(--logo-tile);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 6px;
   display: flex;
-  padding: 9px 12px;
-  box-shadow: 0 18px 50px rgba(3, 0, 11, 0.28);
 }
 
 .brand-mark {
   height: auto;
-  width: min(220px, 44vw);
+  width: min(270px, 52vw);
 }
 
 .club-mark {

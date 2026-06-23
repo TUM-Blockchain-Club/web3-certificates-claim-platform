@@ -11,6 +11,7 @@
 - `supabase/migrations/`: shared Supabase schema used by this claim app and the permanent verification site.
 - `scripts/`: operational scripts, including active participant import.
 - `public/certificate-assets/fonts/`: embedded fonts used for generated PDFs.
+- `public/certificate-assets/templates/`: static PDF certificate templates used as the base for generated PDFs.
 - `docs/`: implementation notes for future agents.
 
 ## Conventions

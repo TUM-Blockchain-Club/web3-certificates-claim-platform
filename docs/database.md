@@ -8,7 +8,7 @@ The claim platform owns the shared Supabase schema for certificates.
 - `public.certificate_nft_preferences`: one NFT destination preference per recipient.
 - `public.certificate_audit_events`: minimal operational audit events.
 - `public.certificate_rate_limits`: hashed request counters for claim-link abuse prevention.
-- `public.certificate_public_verifications`: public verification view consumed by the permanent verification site.
+- `public.certificate_public_verifications`: server-only verification view consumed by the permanent verification site.
 
 `cohort`, `certificate_name`, and `certificate_issued_on` live on each
 recipient row. New imports rely on Supabase defaults:
@@ -28,6 +28,10 @@ The permanent verification site reveals only data associated with a random certi
 - cohort;
 - issue date;
 - validity status.
+
+The Supabase publishable key must not be able to query or list
+`certificate_public_verifications`. The verification site uses the server-only
+Supabase secret key and queries a single certificate by ID.
 
 ## Token Handling
 

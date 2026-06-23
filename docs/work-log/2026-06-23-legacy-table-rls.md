@@ -47,7 +47,8 @@ After applying the migration:
 - only maintained certificate tables remain in `public`;
 - every table in `public` has RLS enabled;
 - `web3_talents` and `web3_mentors` no longer exist;
-- `certificate_public_verifications` remains publicly readable as intended.
+- `certificate_public_verifications` remains readable to the server-side
+  `service_role`, but is not readable with the publishable key.
 
 The remaining non-RLS tables are Supabase-managed tables in `auth`, `realtime`,
 and `vault`, not project-owned application tables.

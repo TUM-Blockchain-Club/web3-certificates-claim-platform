@@ -116,7 +116,7 @@ input {
 .claim-grid {
   display: grid;
   gap: 0;
-  grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+  grid-template-columns: minmax(420px, 0.95fr) minmax(360px, 1.05fr);
   min-height: 580px;
 }
 
@@ -131,11 +131,13 @@ input {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-width: 0;
   padding: clamp(28px, 5vw, 56px);
 }
 
 .form-panel {
   box-shadow: 0 24px 80px rgba(3, 0, 11, 0.36);
+  min-width: 0;
   padding: clamp(28px, 5vw, 56px);
 }
 
@@ -158,8 +160,10 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(44px, 7vw, 88px);
-  max-width: 680px;
+  font-size: clamp(42px, 4.6vw, 74px);
+  max-width: 12ch;
+  overflow-wrap: normal;
+  text-wrap: balance;
 }
 
 h2 {
@@ -183,9 +187,9 @@ h2 {
 }
 
 .meta-line {
-  display: flex;
+  display: grid;
   gap: 14px;
-  justify-content: space-between;
+  grid-template-columns: minmax(110px, max-content) minmax(0, 1fr);
 }
 
 .meta-label {
@@ -198,6 +202,8 @@ h2 {
 
 .meta-value {
   font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
   text-align: right;
 }
 
@@ -391,5 +397,29 @@ h2 {
 
   .summary-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 861px) and (max-width: 1080px) {
+  .claim-grid {
+    grid-template-columns: minmax(360px, 0.95fr) minmax(340px, 1.05fr);
+  }
+
+  h1 {
+    font-size: clamp(40px, 4.2vw, 56px);
+  }
+}
+
+@media (max-width: 520px) {
+  h1 {
+    font-size: clamp(36px, 12vw, 48px);
+  }
+
+  .meta-line {
+    grid-template-columns: 1fr;
+  }
+
+  .meta-value {
+    text-align: left;
   }
 }

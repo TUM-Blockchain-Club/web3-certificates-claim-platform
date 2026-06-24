@@ -17,6 +17,11 @@ recipient row. New imports rely on Supabase defaults:
 - `certificate_name`: `Web3 Talents Certificate`
 - `certificate_issued_on`: `current_date` at first insert
 
+`participant_name` is normalized in Supabase before insert/update by the
+`normalize_certificate_participant_name` trigger. The normalization trims outer
+spaces, collapses repeated whitespace, lowercases the name, and capitalizes each
+word segment, including hyphenated segments.
+
 ## Privacy
 
 The public email form always returns the same response. It must not reveal whether an email exists.

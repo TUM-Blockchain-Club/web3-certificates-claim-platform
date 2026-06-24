@@ -28,6 +28,7 @@
 - Validate participant-owned NFT destinations as EVM addresses.
 - NFT minting is out of scope; store only the preference for a separate minting project.
 - Recipient list editing happens directly in Supabase; do not add an admin UI in v1.
+- Participant names are normalized in Supabase with `normalize_certificate_participant_name`; keep that trigger active when changing imports or schema.
 - Keep the visual theme and generated PDF aligned with the official TUM Blockchain Club dark violet palette from the website repo: background `#03000b`, accent `#672eb3`, highlight `#c29fff`.
 - The public site name is `Web3 Certificate`.
 

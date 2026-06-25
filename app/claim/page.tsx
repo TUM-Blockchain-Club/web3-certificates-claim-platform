@@ -33,7 +33,7 @@ export default async function ClaimPage({ searchParams }: PageProps) {
         <div className="stack">
           <ShieldCheck aria-hidden="true" size={34} strokeWidth={1.8} />
           <p className="kicker">{recipient.cohort}</p>
-          <h1>{recipient.participantName}</h1>
+          <h1 className="claim-name">{recipient.participantName}</h1>
           <p className="lead">
             Your certificate is ready. The verification URL is embedded in the
             PDF and remains public under the certificates subdomain.
@@ -83,4 +83,3 @@ export default async function ClaimPage({ searchParams }: PageProps) {
     </main>
   );
 }
-

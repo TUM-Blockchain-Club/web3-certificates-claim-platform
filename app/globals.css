@@ -160,6 +160,11 @@ h1 {
   text-wrap: balance;
 }
 
+.claim-name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 h2 {
   font-size: clamp(32px, 4vw, 54px);
 }
@@ -293,6 +298,8 @@ h2 {
   box-shadow: 0 24px 80px rgba(3, 0, 11, 0.36);
   display: grid;
   gap: 32px;
+  margin-inline: auto;
+  max-width: 920px;
   padding: clamp(28px, 5vw, 56px);
 }
 
@@ -360,23 +367,32 @@ h2 {
 }
 
 .actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 12px;
+  grid-template-columns: minmax(0, max-content) minmax(0, max-content);
 }
 
 @media (max-width: 860px) {
   .shell {
-    padding: 18px;
+    padding: 18px 16px 24px;
   }
 
   .topbar {
     align-items: flex-start;
     flex-direction: column;
+    gap: 14px;
+  }
+
+  .brand-mark {
+    width: min(252px, 76vw);
+  }
+
+  .club-mark {
+    width: 124px;
   }
 
   .page {
-    padding-top: 44px;
+    padding-top: 38px;
   }
 
   .claim-grid {
@@ -392,6 +408,22 @@ h2 {
   .summary-row {
     grid-template-columns: 1fr;
   }
+
+  .claim-card {
+    gap: 28px;
+    max-width: 620px;
+    padding: 28px;
+    width: min(100%, 620px);
+  }
+
+  .actions {
+    grid-template-columns: minmax(0, 1fr) minmax(92px, 0.48fr);
+  }
+
+  .actions .button {
+    padding-inline: 14px;
+    white-space: nowrap;
+  }
 }
 
 @media (min-width: 861px) and (max-width: 1080px) {
@@ -405,8 +437,58 @@ h2 {
 }
 
 @media (max-width: 520px) {
+  .shell {
+    padding-inline: 16px;
+  }
+
   h1 {
-    font-size: clamp(36px, 12vw, 48px);
+    font-size: clamp(36px, 12vw, 46px);
+  }
+
+  .claim-name {
+    font-size: clamp(38px, 13vw, 50px);
+    line-height: 0.94;
+    max-width: 9.5ch;
+  }
+
+  .claim-card {
+    gap: 24px;
+    padding: 26px;
+  }
+
+  .lead {
+    font-size: 17px;
+    line-height: 1.5;
+  }
+
+  .certificate-summary {
+    margin-inline: -1px;
+  }
+
+  .summary-row {
+    gap: 10px;
+    padding: 17px 18px;
+  }
+
+  .summary-value {
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .radio-option {
+    gap: 8px;
+    grid-template-columns: 20px 1fr;
+    padding: 15px;
+  }
+
+  .actions {
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(84px, 0.46fr);
+  }
+
+  .actions .button {
+    min-height: 52px;
+    padding-inline: 12px;
   }
 
   .meta-line {

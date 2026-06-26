@@ -9,7 +9,7 @@
 - `app/_components/`: client form components.
 - `lib/`: environment validation, database access, Mailgun, magic links, PDF generation, and wallet validation.
 - `supabase/migrations/`: shared Supabase schema used by this claim app and the permanent verification site.
-- `scripts/`: operational scripts, including active participant import.
+- `scripts/`: operational scripts, including active participant import and full recipient-list replacement.
 - `public/certificate-assets/fonts/`: embedded fonts used for generated PDFs.
 - `public/certificate-assets/templates/`: static PDF certificate templates used as the base for generated PDFs.
 - `docs/`: implementation notes for future agents.
@@ -28,6 +28,7 @@
 - Validate participant-owned NFT destinations as EVM addresses.
 - NFT minting is out of scope; store only the preference for a separate minting project.
 - Recipient list editing happens directly in Supabase; do not add an admin UI in v1.
+- When a new two-column `name,email` CSV becomes the source of truth, use `pnpm replace:participants -- --dry-run <csv>` first, then `pnpm replace:participants -- <csv>`.
 - Participant names are normalized in Supabase with `normalize_certificate_participant_name`; keep that trigger active when changing imports or schema.
 - Keep the visual theme and generated PDF aligned with the official TUM Blockchain Club dark violet palette from the website repo: background `#03000b`, accent `#672eb3`, highlight `#c29fff`.
 - The public site name is `Web3 Certificate`.

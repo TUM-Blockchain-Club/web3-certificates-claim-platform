@@ -61,6 +61,18 @@ pnpm import:participants -- "/absolute/path/to/Cohort_Jan2026_Management_Sheet.x
 
 Only rows whose status column is `Active (YES)` are imported.
 
+Replace the full certificate recipient list from a two-column `name,email` CSV:
+
+```bash
+pnpm replace:participants -- "/absolute/path/to/People receiving a certificate - Sheet1.csv"
+```
+
+Preview the replacement without touching the database:
+
+```bash
+pnpm replace:participants -- --dry-run "/absolute/path/to/People receiving a certificate - Sheet1.csv"
+```
+
 Preview the CSV selection without touching the database:
 
 ```bash

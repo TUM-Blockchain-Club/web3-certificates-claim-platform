@@ -81,6 +81,7 @@ try {
       await tx`
         insert into public.certificate_recipients (
           certificate_id,
+          certificate_type,
           participant_name,
           email,
           email_normalized,
@@ -88,6 +89,7 @@ try {
         )
         values (
           ${createCertificateId()},
+          'participant',
           ${row.name},
           ${row.email},
           ${normalizeEmail(row.email)},
@@ -96,6 +98,7 @@ try {
         on conflict (email_normalized)
         do update set
           participant_name = excluded.participant_name,
+          certificate_type = 'participant',
           email = excluded.email,
           source_status = excluded.source_status,
           verification_active = true,

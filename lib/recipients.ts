@@ -13,6 +13,7 @@ type RecipientRow = {
   certificate_id: string;
   certificate_issued_on: string | Date;
   certificate_name: string;
+  certificate_type: CertificateType;
   cohort: string;
   email: string;
   id: string;
@@ -27,6 +28,7 @@ type PreferenceRow = {
 export type CertificateRecipient = {
   certificateId: string;
   certificateName: string;
+  certificateType: CertificateType;
   cohort: string;
   email: string;
   id: string;
@@ -36,10 +38,15 @@ export type CertificateRecipient = {
   verificationUrl: string;
 };
 
+export type CertificateType = "participant" | "mentor";
+
 export type NftPreference = {
   destinationType: "evm_wallet" | "tbc_wallet" | "none";
   evmAddress: string | null;
 };
+
+const RECIPIENT_SELECT =
+  "id, certificate_id, certificate_type, cohort, certificate_name, participant_name, email, certificate_issued_on";
 
 function formatDate(value: string | Date) {
   const isoDate = value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
@@ -59,6 +66,7 @@ function mapRecipient(row: RecipientRow): CertificateRecipient {
   return {
     certificateId: row.certificate_id,
     certificateName: row.certificate_name,
+    certificateType: row.certificate_type,
     cohort: row.cohort,
     email: row.email,
     id: row.id,
@@ -72,9 +80,7 @@ function mapRecipient(row: RecipientRow): CertificateRecipient {
 export async function getRecipientByEmail(email: string) {
   const { data: row, error } = await supabaseAdmin
     .from("certificate_recipients")
-    .select(
-      "id, certificate_id, cohort, certificate_name, participant_name, email, certificate_issued_on",
-    )
+    .select(RECIPIENT_SELECT)
     .eq("email_normalized", email.trim().toLowerCase())
     .eq("verification_active", true)
     .maybeSingle<RecipientRow>();
@@ -89,9 +95,7 @@ export async function getRecipientByEmail(email: string) {
 export async function getRecipientById(id: string) {
   const { data: row, error } = await supabaseAdmin
     .from("certificate_recipients")
-    .select(
-      "id, certificate_id, cohort, certificate_name, participant_name, email, certificate_issued_on",
-    )
+    .select(RECIPIENT_SELECT)
     .eq("id", id)
     .eq("verification_active", true)
     .maybeSingle<RecipientRow>();
@@ -106,9 +110,7 @@ export async function getRecipientById(id: string) {
 export async function getRecipientByCertificateId(certificateId: string) {
   const { data: row, error } = await supabaseAdmin
     .from("certificate_recipients")
-    .select(
-      "id, certificate_id, cohort, certificate_name, participant_name, email, certificate_issued_on",
-    )
+    .select(RECIPIENT_SELECT)
     .eq("certificate_id", certificateId)
     .eq("verification_active", true)
     .maybeSingle<RecipientRow>();

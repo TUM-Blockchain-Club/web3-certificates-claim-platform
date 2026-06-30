@@ -42,8 +42,9 @@ The runtime app uses the Supabase REST API with a server-only secret key. The
 Postgres `DATABASE_URL` should be a Supabase pooler URL and is only for
 migration/import scripts.
 
-Certificate name, cohort, and issue date are stored per recipient in Supabase.
-New participant imports use database defaults for those fields.
+Certificate name, cohort, issue date, and certificate type are stored per
+recipient in Supabase. New participant imports use database defaults for those
+fields. Supported certificate types are `participant` and `mentor`.
 
 ## Database
 
@@ -72,6 +73,9 @@ Preview the replacement without touching the database:
 ```bash
 pnpm replace:participants -- --dry-run "/absolute/path/to/People receiving a certificate - Sheet1.csv"
 ```
+
+The replacement script only modifies rows with `certificate_type = 'participant'`.
+Mentor certificates are kept in the same table with `certificate_type = 'mentor'`.
 
 Preview the CSV selection without touching the database:
 

@@ -29,6 +29,7 @@
 - NFT minting is out of scope; store only the preference for a separate minting project.
 - Recipient list editing happens directly in Supabase; do not add an admin UI in v1.
 - When a new two-column `name,email` CSV becomes the source of truth, use `pnpm replace:participants -- --dry-run <csv>` first, then `pnpm replace:participants -- <csv>`.
+- Certificate recipients have `certificate_type` set to `participant` or `mentor`. Participant replacement scripts must only modify `participant` rows so mentor certificates are not removed by later participant imports.
 - Participant names are normalized in Supabase with `normalize_certificate_participant_name`; keep that trigger active when changing imports or schema.
 - Keep the visual theme and generated PDF aligned with the official TUM Blockchain Club dark violet palette from the website repo: background `#03000b`, accent `#672eb3`, highlight `#c29fff`.
 - The public site name is `Web3 Certificate`.

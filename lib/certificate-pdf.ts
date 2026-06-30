@@ -22,6 +22,12 @@ const TEMPLATE_PATHS = {
   ),
 };
 
+function getCertificateStatement(recipient: CertificateRecipient) {
+  return recipient.certificateType === "mentor"
+    ? "for being a mentor in"
+    : "for successfully completing Web3 Talents";
+}
+
 function centerText(page: ReturnType<PDFDocument["getPage"]>, text: string, options: {
   color?: ReturnType<typeof rgb>;
   font: Awaited<ReturnType<PDFDocument["embedFont"]>>;
@@ -142,7 +148,7 @@ export async function renderCertificatePdf(
     y: 1665,
   });
 
-  centerText(page, "for successfully completing Web3 Talents", {
+  centerText(page, getCertificateStatement(recipient), {
     color: foreground,
     font: serif,
     size: 150,

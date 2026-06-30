@@ -78,6 +78,7 @@ try {
   const existingRows = await sql`
     select email_normalized, participant_name, certificate_id
     from public.certificate_recipients
+    where certificate_type = 'participant'
     order by email_normalized
   `;
   const csvEmails = rows.map((row) => row.email);
@@ -108,6 +109,7 @@ try {
         await tx`
           insert into public.certificate_recipients (
             certificate_id,
+            certificate_type,
             participant_name,
             email,
             email_normalized,
@@ -116,6 +118,7 @@ try {
           )
           values (
             ${row.certificateId},
+            'participant',
             ${row.name},
             ${row.email},
             ${row.email},
@@ -125,6 +128,7 @@ try {
           on conflict (email_normalized)
           do update set
             participant_name = excluded.participant_name,
+            certificate_type = 'participant',
             email = excluded.email,
             source_status = excluded.source_status,
             verification_active = true,
@@ -134,7 +138,8 @@ try {
 
       await tx`
         delete from public.certificate_recipients
-        where email_normalized not in ${tx(csvEmails)}
+        where certificate_type = 'participant'
+          and email_normalized not in ${tx(csvEmails)}
       `;
 
       await tx`

@@ -5,24 +5,27 @@ import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { parse } from "csv-parse/sync";
 import postgres from "postgres";
+import { derivePublicName } from "./lib/names.mjs";
 
-const dryRun = process.argv.includes("--dry-run");
-const csvPath = process.argv.find(
-  (arg, index) => index > 1 && arg !== "--dry-run" && arg !== "--",
+const args = process.argv.slice(2).filter((arg) => arg !== "--");
+const dryRun = args.includes("--dry-run");
+const runIndex = args.indexOf("--run");
+const programRunId = runIndex >= 0 ? args[runIndex + 1] : null;
+const csvPath = args.find(
+  (arg, index) =>
+    arg !== "--dry-run" && arg !== "--run" && index !== runIndex + 1,
 );
 
-if (!csvPath) {
-  console.error("Usage: pnpm import:participants -- /absolute/path/to/file.csv");
+if (!csvPath || !programRunId) {
+  console.error(
+    "Usage: pnpm import:participants -- --run <program-run-id> [--dry-run] /absolute/path/to/file.csv",
+  );
   process.exit(1);
 }
 
-const requiredEnv = ["DATABASE_URL"];
-
-for (const key of requiredEnv) {
-  if (!process.env[key]) {
-    console.error(`Missing required environment variable: ${key}`);
-    process.exit(1);
-  }
+if (!process.env.DATABASE_URL) {
+  console.error("Missing required environment variable: DATABASE_URL");
+  process.exit(1);
 }
 
 function normalizeEmail(email) {
@@ -38,7 +41,6 @@ const rows = parse(content, {
   relax_column_count: true,
   skip_empty_lines: true,
 });
-
 const participantRows = rows.slice(2);
 const statusCounts = new Map();
 
@@ -48,15 +50,25 @@ for (const row of participantRows) {
 }
 
 const activeRows = participantRows
+  .filter(
+    (row) =>
+      String(row[1] ?? "").trim() === "Active (YES)" &&
+      String(row[0] ?? "").trim() &&
+      normalizeEmail(String(row[2] ?? "")).includes("@"),
+  )
   .map((row) => ({
-    email: String(row[2] ?? "").trim(),
-    name: String(row[0] ?? "").trim(),
-    status: String(row[1] ?? "").trim(),
-  }))
-  .filter((row) => row.status === "Active (YES)" && row.name && row.email);
+    email: normalizeEmail(String(row[2] ?? "")),
+    name: derivePublicName(String(row[0] ?? "")),
+    status: "Active (YES)",
+  }));
 
 if (dryRun) {
   console.log(`Active participants: ${activeRows.length}`);
+  console.log(
+    activeRows
+      .map((row) => `${row.name.publicDisplayName} | ${row.email}`)
+      .join("\n"),
+  );
   console.log(
     [...statusCounts.entries()]
       .map(([status, count]) => `${status}: ${count}`)
@@ -73,49 +85,83 @@ const sql = postgres(process.env.DATABASE_URL, {
   ssl: "require",
 });
 
-let insertedOrUpdated = 0;
-
 try {
+  const [programRun] = await sql`
+    select id
+    from public.certificate_program_runs
+    where id = ${programRunId}
+  `;
+
+  if (!programRun) {
+    throw new Error(`Unknown Program Run: ${programRunId}`);
+  }
+
   await sql.begin(async (tx) => {
     for (const row of activeRows) {
-      await tx`
+      const [recipient] = await tx`
         insert into public.certificate_recipients (
-          certificate_id,
-          certificate_type,
-          participant_name,
+          full_name,
+          preferred_first_name,
+          family_name,
+          public_display_name,
           email,
-          email_normalized,
-          source_status
+          email_normalized
         )
         values (
-          ${createCertificateId()},
-          'participant',
-          ${row.name},
+          ${row.name.fullName},
+          ${row.name.preferredFirstName},
+          ${row.name.familyName},
+          ${row.name.publicDisplayName},
           ${row.email},
-          ${normalizeEmail(row.email)},
-          'Active (YES)'
+          ${row.email}
         )
         on conflict (email_normalized)
         do update set
-          participant_name = excluded.participant_name,
-          certificate_type = 'participant',
+          full_name = excluded.full_name,
+          preferred_first_name = excluded.preferred_first_name,
+          family_name = excluded.family_name,
+          public_display_name = excluded.public_display_name,
           email = excluded.email,
-          source_status = excluded.source_status,
+          updated_at = now()
+        returning id
+      `;
+
+      await tx`
+        insert into public.certificate_credentials (
+          recipient_id,
+          program_run_id,
+          certificate_id,
+          credential_type,
+          certificate_name,
+          issued_on,
+          source_status,
+          verification_active
+        )
+        values (
+          ${recipient.id},
+          ${programRunId},
+          ${createCertificateId()},
+          'participant',
+          'Web3 Talents Certificate',
+          current_date,
+          'Active',
+          true
+        )
+        on conflict (recipient_id, program_run_id, credential_type)
+        do update set
+          source_status = 'Active',
           verification_active = true,
           updated_at = now()
       `;
-      insertedOrUpdated += 1;
     }
 
     await tx`
-      insert into public.certificate_audit_events (
-        event_type,
-        metadata
-      )
+      insert into public.certificate_audit_events (event_type, metadata)
       values (
         'participants_imported',
         ${tx.json({
           activeRows: activeRows.length,
+          programRunId,
           sourceFile: csvPath,
         })}
       )
@@ -125,4 +171,4 @@ try {
   await sql.end();
 }
 
-console.log(`Imported ${insertedOrUpdated} active participants.`);
+console.log(`Imported ${activeRows.length} active participants into ${programRunId}.`);

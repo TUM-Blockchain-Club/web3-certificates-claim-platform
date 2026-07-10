@@ -5,14 +5,21 @@ import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { parse } from "csv-parse/sync";
 import postgres from "postgres";
+import { derivePublicName } from "./lib/names.mjs";
 
-const dryRun = process.argv.includes("--dry-run");
-const csvPath = process.argv.find(
-  (arg, index) => index > 1 && arg !== "--dry-run" && arg !== "--",
+const args = process.argv.slice(2).filter((arg) => arg !== "--");
+const dryRun = args.includes("--dry-run");
+const runIndex = args.indexOf("--run");
+const programRunId = runIndex >= 0 ? args[runIndex + 1] : null;
+const csvPath = args.find(
+  (arg, index) =>
+    arg !== "--dry-run" && arg !== "--run" && index !== runIndex + 1,
 );
 
-if (!csvPath) {
-  console.error("Usage: pnpm replace:participants -- /absolute/path/to/file.csv");
+if (!csvPath || !programRunId) {
+  console.error(
+    "Usage: pnpm replace:participants -- --run <program-run-id> [--dry-run] /absolute/path/to/file.csv",
+  );
   process.exit(1);
 }
 
@@ -38,23 +45,23 @@ const parsedRows = parse(content, {
   trim: true,
 });
 
+if (parsedRows.length === 0) {
+  throw new Error("Recipient CSV is empty.");
+}
+
 const rows = parsedRows.map((row, index) => {
-  const name = String(row[0] ?? "").trim();
+  const name = derivePublicName(String(row[0] ?? ""));
   const email = normalizeEmail(String(row[1] ?? ""));
 
-  if (!name || !email || !email.includes("@")) {
-    throw new Error(`Invalid recipient row at CSV line ${index + 1}`);
+  if (!email.includes("@")) {
+    throw new Error(`Invalid recipient email at CSV line ${index + 1}`);
   }
 
   if (row.length > 2 && row.slice(2).some((value) => String(value ?? "").trim())) {
     throw new Error(`Unexpected extra columns at CSV line ${index + 1}`);
   }
 
-  return {
-    certificateId: createCertificateId(),
-    email,
-    name,
-  };
+  return { email, name };
 });
 
 const seenEmails = new Set();
@@ -62,7 +69,6 @@ for (const row of rows) {
   if (seenEmails.has(row.email)) {
     throw new Error(`Duplicate recipient email in CSV: ${row.email}`);
   }
-
   seenEmails.add(row.email);
 }
 
@@ -76,14 +82,22 @@ const sql = postgres(process.env.DATABASE_URL, {
 
 try {
   const existingRows = await sql`
-    select email_normalized, participant_name, certificate_id
-    from public.certificate_recipients
-    where certificate_type = 'participant'
-    order by email_normalized
+    select
+      r.email_normalized,
+      r.full_name,
+      r.public_display_name,
+      c.certificate_id
+    from public.certificate_credentials c
+    join public.certificate_recipients r on r.id = c.recipient_id
+    where c.program_run_id = ${programRunId}
+      and c.credential_type = 'participant'
+      and c.source_status = 'Active'
+    order by r.email_normalized
   `;
-  const csvEmails = rows.map((row) => row.email);
   const existingEmails = new Set(existingRows.map((row) => row.email_normalized));
-  const deletedRows = existingRows.filter((row) => !seenEmails.has(row.email_normalized));
+  const inactiveRows = existingRows.filter(
+    (row) => !seenEmails.has(row.email_normalized),
+  );
   const insertedRows = rows.filter((row) => !existingEmails.has(row.email));
   const updatedRows = rows.filter((row) => existingEmails.has(row.email));
 
@@ -92,89 +106,130 @@ try {
       JSON.stringify(
         {
           csvRows: rows.length,
-          deleteCount: deletedRows.length,
-          deletedRows,
+          inactivateCount: inactiveRows.length,
+          inactiveRows,
           insertCount: insertedRows.length,
-          insertedRows: insertedRows.map(({ email, name }) => ({ email, name })),
+          insertedRows: insertedRows.map(({ email, name }) => ({
+            email,
+            fullName: name.fullName,
+            publicDisplayName: name.publicDisplayName,
+          })),
+          programRunId,
           updateCount: updatedRows.length,
-          updatedRows: updatedRows.map(({ email, name }) => ({ email, name })),
+          updatedRows: updatedRows.map(({ email, name }) => ({
+            email,
+            fullName: name.fullName,
+            publicDisplayName: name.publicDisplayName,
+          })),
         },
         null,
         2,
       ),
     );
-  } else {
-    await sql.begin(async (tx) => {
-      for (const row of rows) {
-        await tx`
-          insert into public.certificate_recipients (
-            certificate_id,
-            certificate_type,
-            participant_name,
-            email,
-            email_normalized,
-            source_status,
-            verification_active
-          )
-          values (
-            ${row.certificateId},
-            'participant',
-            ${row.name},
-            ${row.email},
-            ${row.email},
-            'Active (YES)',
-            true
-          )
-          on conflict (email_normalized)
-          do update set
-            participant_name = excluded.participant_name,
-            certificate_type = 'participant',
-            email = excluded.email,
-            source_status = excluded.source_status,
-            verification_active = true,
-            updated_at = now()
-        `;
-      }
+    process.exit(0);
+  }
 
-      await tx`
-        delete from public.certificate_recipients
-        where certificate_type = 'participant'
-          and email_normalized not in ${tx(csvEmails)}
-      `;
-
-      await tx`
-        insert into public.certificate_audit_events (
-          event_type,
-          metadata
+  await sql.begin(async (tx) => {
+    for (const row of rows) {
+      const [recipient] = await tx`
+        insert into public.certificate_recipients (
+          full_name,
+          preferred_first_name,
+          family_name,
+          public_display_name,
+          email,
+          email_normalized
         )
         values (
-          'participants_replaced',
-          ${tx.json({
-            csvRows: rows.length,
-            deleteCount: deletedRows.length,
-            deletedEmails: deletedRows.map((row) => row.email_normalized),
-            insertCount: insertedRows.length,
-            insertedEmails: insertedRows.map((row) => row.email),
-            sourceFile: csvPath,
-            updateCount: updatedRows.length,
-          })}
+          ${row.name.fullName},
+          ${row.name.preferredFirstName},
+          ${row.name.familyName},
+          ${row.name.publicDisplayName},
+          ${row.email},
+          ${row.email}
         )
+        on conflict (email_normalized)
+        do update set
+          full_name = excluded.full_name,
+          preferred_first_name = excluded.preferred_first_name,
+          family_name = excluded.family_name,
+          public_display_name = excluded.public_display_name,
+          email = excluded.email,
+          updated_at = now()
+        returning id
       `;
-    });
 
-    console.log(
-      JSON.stringify(
-        {
+      await tx`
+        insert into public.certificate_credentials (
+          recipient_id,
+          program_run_id,
+          certificate_id,
+          credential_type,
+          certificate_name,
+          issued_on,
+          source_status,
+          verification_active
+        )
+        values (
+          ${recipient.id},
+          ${programRunId},
+          ${createCertificateId()},
+          'participant',
+          'Web3 Talents Certificate',
+          current_date,
+          'Active',
+          true
+        )
+        on conflict (recipient_id, program_run_id, credential_type)
+        do update set
+          source_status = 'Active',
+          verification_active = true,
+          updated_at = now()
+      `;
+    }
+
+    const csvEmails = rows.map((row) => row.email);
+    await tx`
+      update public.certificate_credentials c
+      set
+        source_status = 'Inactive',
+        verification_active = false,
+        updated_at = now()
+      from public.certificate_recipients r
+      where c.recipient_id = r.id
+        and c.program_run_id = ${programRunId}
+        and c.credential_type = 'participant'
+        and r.email_normalized not in ${tx(csvEmails)}
+    `;
+
+    await tx`
+      insert into public.certificate_audit_events (event_type, metadata)
+      values (
+        'participants_replaced',
+        ${tx.json({
           csvRows: rows.length,
-          deleted: deletedRows.length,
-          inserted: insertedRows.length,
-          updated: updatedRows.length,
-        },
-        null,
-        2,
-      ),
-    );
-  }
+          inactivatedEmails: inactiveRows.map((row) => row.email_normalized),
+          insertCount: insertedRows.length,
+          programRunId,
+          sourceFile: csvPath,
+          updateCount: updatedRows.length,
+        })}
+      )
+    `;
+  });
+
+  console.log(
+    JSON.stringify(
+      {
+        inactivated: inactiveRows.length,
+        inserted: insertedRows.length,
+        programRunId,
+        updated: updatedRows.length,
+      },
+      null,
+      2,
+    ),
+  );
 } finally {
   await sql.end();
 }

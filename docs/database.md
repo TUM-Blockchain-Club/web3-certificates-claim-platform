@@ -1,50 +1,48 @@
-# Database
+# Certificate Database
 
-The claim platform owns the shared Supabase schema for certificates.
+## Ownership
 
-## Tables
+The claim platform owns the shared Supabase schema. The NFT pipeline in
+`w3t-nfts` consumes frozen Issuance Manifests exported from this database.
+Schema and manifest changes must be coordinated across both repositories.
 
-- `public.certificate_recipients`: active certificate recipients imported from the cohort CSV.
-- `public.certificate_nft_preferences`: one NFT destination preference per recipient.
-- `public.certificate_audit_events`: minimal operational audit events.
-- `public.certificate_rate_limits`: hashed request counters for claim-link abuse prevention.
-- `public.certificate_public_verifications`: server-only verification view consumed by the permanent verification site.
+## Core Tables
 
-`cohort`, `certificate_name`, and `certificate_issued_on` live on each
-recipient row. New imports rely on Supabase defaults:
+- `certificate_programs`: durable educational programs.
+- `certificate_program_runs`: fixed iterations of a Program.
+- `certificate_recipients`: private person and contact data, including full and
+  structured names.
+- `certificate_credentials`: one participant or mentor attestation for one
+  Recipient and Program Run.
+- `certificate_nft_preferences`: one NFT destination preference per Credential.
+- `certificate_issuances`: on-chain token history imported from completed mint
+  receipts, including replacements and revocations.
+- `certificate_audit_events`: security and operational audit records.
+- `certificate_rate_limits`: hashed public request counters.
+- `certificate_schema_migrations`: immutable migration checksums.
 
-- `cohort`: `Blockchain Fundamentals 1`
-- `certificate_name`: `Web3 Talents Certificate`
-- `certificate_issued_on`: `current_date` at first insert
+Foreign-key columns used for joins and cascades are indexed. RLS is enabled on
+private tables, and runtime access uses the server-only service-role client.
 
-`participant_name` is normalized in Supabase before insert/update by the
-`normalize_certificate_participant_name` trigger. The normalization trims outer
-spaces, collapses repeated whitespace, lowercases the name, and capitalizes each
-word segment, including hyphenated segments.
+## Names
 
-## Privacy
+`certificate_recipients.full_name` remains private and is used for protected
+PDFs. Imports derive `preferred_first_name`, `family_name`, and
+`public_display_name`; the public form is `Preferred F.` and can be corrected in
+Supabase before a batch is frozen.
 
-The public email form always returns the same response. It must not reveal whether an email exists.
+The public verification view preserves its existing field names but maps
+`participant_name` to the privacy-minimized `public_display_name`.
 
-The permanent verification site reveals only data associated with a random certificate ID:
+## Issuance Boundary
 
-- participant name;
-- certificate name;
-- cohort;
-- issue date;
-- validity status.
+`pnpm export:issuance -- --run <id> --preview` lists mintable public names and
+destinations. The output mode creates a private schema-versioned manifest and a
+SHA-256 sidecar. The manifest is immutable input to `w3t-nfts`; it is not stored
+in Git.
 
-The Supabase publishable key must not be able to query or list
-`certificate_public_verifications`. The verification site uses the server-only
-Supabase secret key and queries a single certificate by ID.
+## Migration Rollout
 
-## Token Handling
-
-Magic links are not stored. The signed payload contains only recipient ID, issued-at timestamp, and expiry timestamp.
-
-## Rate Limiting
-
-Claim-link requests are limited with `public.consume_certificate_rate_limit`.
-The application hashes email and IP keys with `MAGIC_LINK_SECRET` before sending
-them to Supabase, so the rate-limit table does not store raw email addresses or
-IP addresses.
+The reusable Credential migration changes the runtime table layout. Apply it in
+coordination with deployment of the matching claim-platform code. Do not apply
+it independently while an older production build is still serving requests.

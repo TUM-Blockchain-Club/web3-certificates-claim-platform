@@ -113,6 +113,13 @@ The export resolves `tbc_wallet` preferences to `TBC_CUSTODY_WALLET`, writes the
 manifest with mode `0600`, and writes a SHA-256 sidecar. Do not export until the
 display-name preview has been approved.
 
+After a Polygon batch completes in `w3t-nfts`, import its confirmed, checksummed
+receipts idempotently:
+
+```bash
+pnpm import:issuance -- --receipts private/blockchain-fundamentals-1-receipts.json
+```
+
 ## Checks
 
 ```bash

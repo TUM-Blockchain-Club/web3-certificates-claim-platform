@@ -52,6 +52,8 @@
   family-name initial.
 - Preview issuance names with `pnpm export:issuance -- --run <id> --preview`
   before exporting a private manifest.
+- Import confirmed `w3t-nfts` receipts with `pnpm import:issuance`; the import is
+  checksummed and idempotent by transaction hash.
 - Keep the visual theme and generated PDF aligned with the official TUM Blockchain Club dark violet palette from the website repo: background `#03000b`, accent `#672eb3`, highlight `#c29fff`.
 - The public site name is `Web3 Certificate`.
 

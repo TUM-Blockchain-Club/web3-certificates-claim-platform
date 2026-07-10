@@ -29,6 +29,8 @@ try {
         check (checksum_sha256 ~ '^[0-9a-f]{64}$')
     )
   `;
+  await sql`alter table public.certificate_schema_migrations enable row level security`;
+  await sql`revoke all on table public.certificate_schema_migrations from anon, authenticated`;
 
   const migrationsDir = "supabase/migrations";
   const migrations = (await readdir(migrationsDir))

@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "node scripts/run-migration.mjs",
     "export:issuance": "node scripts/export-issuance-manifest.mjs",
+    "import:issuance": "node scripts/import-issuance-receipts.mjs",
     "import:participants": "node scripts/import-active-participants.mjs",
     "replace:participants": "node scripts/replace-certificate-recipients.mjs",
     "test:scripts": "node --test scripts/lib/*.test.mjs"

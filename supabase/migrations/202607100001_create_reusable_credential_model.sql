@@ -151,6 +151,9 @@ create index certificate_credentials_program_run_type_idx
 alter table public.certificate_nft_preferences
   rename column recipient_id to credential_id;
 
+alter index public.certificate_nft_preferences_recipient_id_idx
+  rename to certificate_nft_preferences_credential_id_idx;
+
 alter table public.certificate_nft_preferences
   add constraint certificate_nft_preferences_credential_id_fkey
   foreign key (credential_id)
@@ -159,6 +162,9 @@ alter table public.certificate_nft_preferences
 
 alter table public.certificate_audit_events
   rename column recipient_id to credential_id;
+
+alter index public.certificate_audit_events_recipient_id_idx
+  rename to certificate_audit_events_credential_id_idx;
 
 alter table public.certificate_audit_events
   add constraint certificate_audit_events_credential_id_fkey

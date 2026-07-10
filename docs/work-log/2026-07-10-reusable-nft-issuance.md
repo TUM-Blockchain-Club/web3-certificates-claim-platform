@@ -17,6 +17,8 @@ Talents participant and mentor Credential issuance.
   export for `w3t-nfts`.
 - Added migration checksum tracking so historical migrations are never silently
   modified or reapplied after the schema transition.
+- Added an idempotent import for checksummed confirmed mint receipts so Supabase
+  records active on-chain issuance history after each operational batch.
 
 ## Deployment Constraint
 

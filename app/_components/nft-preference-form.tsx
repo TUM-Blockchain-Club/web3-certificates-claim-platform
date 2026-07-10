@@ -14,11 +14,12 @@ const initialState: NftPreferenceState = {
 };
 
 type Props = {
+  credentialId: string;
   token: string;
   existingPreference: NftPreference | null;
 };
 
-export function NftPreferenceForm({ token, existingPreference }: Props) {
+export function NftPreferenceForm({ credentialId, token, existingPreference }: Props) {
   const [state, formAction, isPending] = useActionState(
     saveNftPreference,
     initialState,
@@ -29,6 +30,7 @@ export function NftPreferenceForm({ token, existingPreference }: Props) {
 
   return (
     <form action={formAction} className="stack">
+      <input name="credentialId" type="hidden" value={credentialId} />
       <input name="token" type="hidden" value={token} />
       <fieldset className="radio-grid">
         <legend>TBC NFT</legend>
@@ -99,4 +101,3 @@ export function NftPreferenceForm({ token, existingPreference }: Props) {
     </form>
   );
 }
-

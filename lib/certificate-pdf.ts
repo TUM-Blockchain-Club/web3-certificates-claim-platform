@@ -3,7 +3,7 @@ import { PDFDocument, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { CertificateRecipient } from "@/lib/recipients";
+import type { CertificateCredential } from "@/lib/recipients";
 
 const PUBLIC_DIR = join(/*turbopackIgnore: true*/ process.cwd(), "public");
 const FONT_PATHS = {
@@ -22,7 +22,7 @@ const TEMPLATE_PATHS = {
   ),
 };
 
-function getCertificateStatement(recipient: CertificateRecipient) {
+function getCertificateStatement(recipient: CertificateCredential) {
   return recipient.certificateType === "mentor"
     ? "for being a mentor in"
     : "for successfully completing Web3 Talents";
@@ -71,7 +71,7 @@ function rightText(page: ReturnType<PDFDocument["getPage"]>, text: string, optio
 }
 
 export async function renderCertificatePdf(
-  recipient: CertificateRecipient,
+  recipient: CertificateCredential,
 ) {
   const templateBytes = await readFile(/*turbopackIgnore: true*/ TEMPLATE_PATHS.certificate);
   const pdfDoc = await PDFDocument.load(templateBytes);

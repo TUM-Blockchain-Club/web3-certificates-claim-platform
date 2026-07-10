@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { renderCertificatePdf } from "@/lib/certificate-pdf";
 import { verifyMagicLinkToken } from "@/lib/magic-link";
-import { getRecipientByCertificateId } from "@/lib/recipients";
+import { getCredentialByCertificateId } from "@/lib/recipients";
 
 type RouteContext = {
   params: Promise<{
@@ -19,16 +19,16 @@ export async function GET(request: Request, { params }: RouteContext) {
     notFound();
   }
 
-  const recipient = await getRecipientByCertificateId(certificateId);
+  const credential = await getCredentialByCertificateId(certificateId);
 
-  if (!recipient || recipient.id !== payload.recipientId) {
+  if (!credential || credential.recipientId !== payload.recipientId) {
     notFound();
   }
 
-  const pdfBytes = await renderCertificatePdf(recipient);
+  const pdfBytes = await renderCertificatePdf(credential);
   const pdfBody = new ArrayBuffer(pdfBytes.byteLength);
   new Uint8Array(pdfBody).set(pdfBytes);
-  const filename = `web3-talents-certificate-${recipient.certificateId}.pdf`;
+  const filename = `web3-talents-certificate-${credential.certificateId}.pdf`;
 
   return new Response(pdfBody, {
     headers: {

@@ -3,6 +3,7 @@
 import { sendClaimLinkEmail } from "@/lib/mailgun";
 import { createMagicLinkToken, verifyMagicLinkToken } from "@/lib/magic-link";
 import {
+  getCredentialById,
   getRecipientByEmail,
   savePreference,
   writeAuditEvent,
@@ -57,16 +58,21 @@ export async function requestClaimLink(
       const token = createMagicLinkToken(recipient.id);
       const claimUrl = new URL("/claim", env.NEXT_PUBLIC_SITE_URL);
       claimUrl.searchParams.set("token", token);
+      const certificateName =
+        recipient.credentials.length === 1
+          ? recipient.credentials[0].certificateName
+          : "Web3 Talents certificates";
 
       await sendClaimLinkEmail({
-        certificateName: recipient.certificateName,
+        certificateName,
         claimUrl: claimUrl.toString(),
         participantName: recipient.participantName,
         to: recipient.email,
       });
 
-      await writeAuditEvent(recipient.id, "claim_link_sent", {
+      await writeAuditEvent(null, "claim_link_sent", {
         domain: env.MAILGUN_DOMAIN,
+        recipientId: recipient.id,
       });
     }
   } catch (error) {
@@ -94,6 +100,7 @@ export async function saveNftPreference(
   }
 
   const destinationType = String(formData.get("destinationType") ?? "none");
+  const credentialId = String(formData.get("credentialId") ?? "");
   const rawAddress = String(formData.get("evmAddress") ?? "").trim();
 
   if (
@@ -115,13 +122,21 @@ export async function saveNftPreference(
   }
 
   try {
+    const credential = await getCredentialById(credentialId);
+    if (!credential || credential.recipientId !== payload.recipientId) {
+      return {
+        status: "error",
+        message: "The credential does not belong to this claim link.",
+      };
+    }
+
     await savePreference({
+      credentialId,
       destinationType,
       evmAddress: destinationType === "evm_wallet" ? rawAddress : null,
-      recipientId: payload.recipientId,
     });
 
-    await writeAuditEvent(payload.recipientId, "nft_preference_saved", {
+    await writeAuditEvent(credentialId, "nft_preference_saved", {
       destinationType,
     });
 

@@ -309,6 +309,16 @@ h2 {
   gap: 1px;
 }
 
+.credential-block {
+  display: grid;
+  gap: 24px;
+}
+
+.credential-block + .credential-block {
+  border-top: 1px solid var(--line);
+  padding-top: 32px;
+}
+
 .summary-row {
   background: rgba(3, 0, 11, 0.46);
   display: grid;

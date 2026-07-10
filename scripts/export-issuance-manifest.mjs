@@ -7,6 +7,7 @@ import { dirname, resolve } from "node:path";
 import postgres from "postgres";
 
 const EVM_ADDRESS_PATTERN = /^0x[0-9A-Fa-f]{40}$/;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const args = process.argv.slice(2).filter((arg) => arg !== "--");
 const preview = args.includes("--preview");
 const runIndex = args.indexOf("--run");
@@ -82,8 +83,12 @@ try {
   }
 
   const custodyWallet = process.env.TBC_CUSTODY_WALLET;
-  if (!custodyWallet || !EVM_ADDRESS_PATTERN.test(custodyWallet)) {
-    throw new Error("TBC_CUSTODY_WALLET must be a valid EVM address.");
+  if (
+    !custodyWallet ||
+    !EVM_ADDRESS_PATTERN.test(custodyWallet) ||
+    custodyWallet.toLowerCase() === ZERO_ADDRESS
+  ) {
+    throw new Error("TBC_CUSTODY_WALLET must be a valid non-zero EVM address.");
   }
 
   const first = rows[0];

@@ -153,7 +153,11 @@ try {
           full_name = excluded.full_name,
           preferred_first_name = excluded.preferred_first_name,
           family_name = excluded.family_name,
-          public_display_name = excluded.public_display_name,
+          public_display_name = case
+            when public.certificate_recipients.public_display_name_overridden
+              then public.certificate_recipients.public_display_name
+            else excluded.public_display_name
+          end,
           email = excluded.email,
           updated_at = now()
         returning id

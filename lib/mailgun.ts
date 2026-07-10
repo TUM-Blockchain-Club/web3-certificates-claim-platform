@@ -1,6 +1,7 @@
 import { env } from "@/lib/env";
 
 type SendClaimLinkEmailInput = {
+  certificateCount: number;
   certificateName: string;
   claimUrl: string;
   participantName: string;
@@ -16,6 +17,7 @@ function escapeHtml(value: string) {
 }
 
 export async function sendClaimLinkEmail({
+  certificateCount,
   certificateName,
   claimUrl,
   participantName,
@@ -24,10 +26,13 @@ export async function sendClaimLinkEmail({
   const endpoint = `https://api.mailgun.net/v3/${env.MAILGUN_DOMAIN}/messages`;
   const from = `${env.MAILGUN_FROM_NAME} <${env.MAILGUN_FROM_EMAIL}>`;
   const subject = "Claim your Web3 Talents certificate";
+  const certificateLabel =
+    certificateCount === 1 ? certificateName : "Web3 Talents certificates";
+  const readiness = certificateCount === 1 ? "is" : "are";
   const plainText = [
     `Hi ${participantName},`,
     "",
-    `Your ${certificateName} is ready.`,
+    `Your ${certificateLabel} ${readiness} ready.`,
     "",
     `Claim link: ${claimUrl}`,
     "",
@@ -38,7 +43,7 @@ export async function sendClaimLinkEmail({
   const html = `
     <div style="font-family: Arial, sans-serif; line-height: 1.55; color: #161616;">
       <p>Hi ${escapeHtml(participantName)},</p>
-      <p>Your ${escapeHtml(certificateName)} is ready.</p>
+      <p>Your ${escapeHtml(certificateLabel)} ${readiness} ready.</p>
       <p>
         <a href="${escapeHtml(claimUrl)}" style="background:#161616;color:#ffffff;display:inline-block;padding:12px 18px;text-decoration:none;font-weight:700;">
           Claim certificate
@@ -71,4 +76,3 @@ export async function sendClaimLinkEmail({
     throw new Error(`Mailgun request failed: ${response.status} ${message}`);
   }
 }
-

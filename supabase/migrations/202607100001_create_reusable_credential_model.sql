@@ -52,6 +52,7 @@ create table public.certificate_recipients (
   preferred_first_name text not null,
   family_name text not null,
   public_display_name text not null,
+  public_display_name_overridden boolean not null default false,
   email text not null,
   email_normalized text not null unique,
   created_at timestamptz not null default now(),
@@ -73,6 +74,7 @@ insert into public.certificate_recipients (
   preferred_first_name,
   family_name,
   public_display_name,
+  public_display_name_overridden,
   email,
   email_normalized,
   created_at,
@@ -87,6 +89,7 @@ select
     || ' '
     || left(regexp_replace(participant_name, '^.*[[:space:]]+', ''), 1)
     || '.',
+  false,
   email,
   email_normalized,
   created_at,

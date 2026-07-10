@@ -50,6 +50,8 @@
 - Preserve full names for protected PDFs. Public NFT and verification artifacts
   use the reviewed `public_display_name`, derived as preferred first name plus
   family-name initial.
+- Set `public_display_name_overridden = true` with any reviewed manual public
+  name correction so later imports do not replace it.
 - Preview issuance names with `pnpm export:issuance -- --run <id> --preview`
   before exporting a private manifest.
 - Import confirmed `w3t-nfts` receipts with `pnpm import:issuance`; the import is

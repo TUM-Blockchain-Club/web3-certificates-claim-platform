@@ -29,7 +29,8 @@ private tables, and runtime access uses the server-only service-role client.
 `certificate_recipients.full_name` remains private and is used for protected
 PDFs. Imports derive `preferred_first_name`, `family_name`, and
 `public_display_name`; the public form is `Preferred F.` and can be corrected in
-Supabase before a batch is frozen.
+Supabase before a batch is frozen. Set `public_display_name_overridden = true`
+for reviewed exceptions so later imports preserve the correction.
 
 The public verification view preserves its existing field names but maps
 `participant_name` to the privacy-minimized `public_display_name`.

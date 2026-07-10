@@ -58,13 +58,10 @@ export async function requestClaimLink(
       const token = createMagicLinkToken(recipient.id);
       const claimUrl = new URL("/claim", env.NEXT_PUBLIC_SITE_URL);
       claimUrl.searchParams.set("token", token);
-      const certificateName =
-        recipient.credentials.length === 1
-          ? recipient.credentials[0].certificateName
-          : "Web3 Talents certificates";
 
       await sendClaimLinkEmail({
-        certificateName,
+        certificateCount: recipient.credentials.length,
+        certificateName: recipient.credentials[0].certificateName,
         claimUrl: claimUrl.toString(),
         participantName: recipient.participantName,
         to: recipient.email,

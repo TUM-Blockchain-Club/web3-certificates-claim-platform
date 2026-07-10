@@ -19,6 +19,7 @@ Talents participant and mentor Credential issuance.
   modified or reapplied after the schema transition.
 - Added an idempotent import for checksummed confirmed mint receipts so Supabase
   records active on-chain issuance history after each operational batch.
+- Preserved explicitly marked display-name corrections across later CSV imports.
 
 ## Deployment Constraint
 

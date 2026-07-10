@@ -9,10 +9,23 @@
 - `app/_components/`: client form components.
 - `lib/`: environment validation, database access, Mailgun, magic links, PDF generation, and wallet validation.
 - `supabase/migrations/`: shared Supabase schema used by this claim app and the permanent verification site.
-- `scripts/`: operational scripts, including active participant import and full recipient-list replacement.
+- `scripts/`: tracked migrations, Program Run imports, name derivation, and private Issuance Manifest export.
 - `public/certificate-assets/fonts/`: embedded fonts used for generated PDFs.
 - `public/certificate-assets/templates/`: static PDF certificate templates used as the base for generated PDFs.
 - `docs/`: implementation notes for future agents.
+
+## Shared Schema Contract
+
+- This repository owns the Supabase schema and exports the private Issuance
+  Manifest consumed by the sibling `w3t-nfts` repository.
+- Any Supabase change involving Programs, Program Runs, Recipients, Credentials,
+  NFT preferences, issuances, verification views, or manifest fields must be
+  checked against `w3t-nfts` in the same change.
+- Update both repositories' validators, scripts, tests, `README.md`, and
+  `AGENTS.md` whenever their shared schema or manifest contract changes.
+- Keep the public verification view's compatibility with
+  `web3-certificates-verify` unless that repository is updated in the same
+  rollout.
 
 ## Conventions
 
@@ -26,11 +39,19 @@
 - Do not expose whether an email address exists in the public request flow.
 - Keep claim-link rate limiting enabled before recipient lookup or Mailgun sending.
 - Validate participant-owned NFT destinations as EVM addresses.
-- NFT minting is out of scope; store only the preference for a separate minting project.
+- NFT minting is out of scope. Export a frozen private Issuance Manifest for
+  `w3t-nfts`; never place signing keys or mint execution in this web app.
 - Recipient list editing happens directly in Supabase; do not add an admin UI in v1.
-- When a new two-column `name,email` CSV becomes the source of truth, use `pnpm replace:participants -- --dry-run <csv>` first, then `pnpm replace:participants -- <csv>`.
-- Certificate recipients have `certificate_type` set to `participant` or `mentor`. Participant replacement scripts must only modify `participant` rows so mentor certificates are not removed by later participant imports.
-- Participant names are normalized in Supabase with `normalize_certificate_participant_name`; keep that trigger active when changing imports or schema.
+- Pass an explicit `--run <program-run-id>` to recipient import and replacement
+  scripts. Preview replacements before applying them.
+- Recipients and Credentials are separate records. Participant replacement must
+  only inactivate participant Credentials in the selected Program Run; it must
+  not delete Recipients or alter mentor Credentials.
+- Preserve full names for protected PDFs. Public NFT and verification artifacts
+  use the reviewed `public_display_name`, derived as preferred first name plus
+  family-name initial.
+- Preview issuance names with `pnpm export:issuance -- --run <id> --preview`
+  before exporting a private manifest.
 - Keep the visual theme and generated PDF aligned with the official TUM Blockchain Club dark violet palette from the website repo: background `#03000b`, accent `#672eb3`, highlight `#c29fff`.
 - The public site name is `Web3 Certificate`.
 

@@ -43,8 +43,21 @@ Postgres `DATABASE_URL` should be a Supabase pooler URL and is only for
 migration/import scripts.
 
 Certificate name, cohort, issue date, and certificate type are stored per
-recipient in Supabase. New participant imports use database defaults for those
-fields. Supported certificate types are `participant` and `mentor`.
+Credential in Supabase. Recipients are stored separately so the same person can
+receive participant and mentor Credentials across multiple Program Runs.
+Supported Credential types are `participant` and `mentor`.
+
+## Shared Schema Contract
+
+This repository owns the shared Supabase schema and the private Issuance
+Manifest export consumed by the sibling `w3t-nfts` repository. Any change to
+recipient, Credential, Program Run, NFT preference, issuance, public
+verification view, or manifest fields must be reviewed in both repositories.
+Update the matching types, validators, scripts, tests, `README.md`, and
+`AGENTS.md` in `w3t-nfts` in the same coordinated change.
+
+Do not make the NFT pipeline query mutable recipient rows while minting. Export
+and archive a frozen manifest first.
 
 ## Database
 
@@ -57,7 +70,7 @@ pnpm db:migrate
 Import active participants from the cohort CSV:
 
 ```bash
-pnpm import:participants -- "/absolute/path/to/Cohort_Jan2026_Management_Sheet.xlsx - All Participants NEW.csv"
+pnpm import:participants -- --run blockchain-fundamentals-1 "/absolute/path/to/Cohort_Jan2026_Management_Sheet.xlsx - All Participants NEW.csv"
 ```
 
 Only rows whose status column is `Active (YES)` are imported.
@@ -65,13 +78,13 @@ Only rows whose status column is `Active (YES)` are imported.
 Replace the full certificate recipient list from a two-column `name,email` CSV:
 
 ```bash
-pnpm replace:participants -- "/absolute/path/to/People receiving a certificate - Sheet1.csv"
+pnpm replace:participants -- --run blockchain-fundamentals-1 "/absolute/path/to/People receiving a certificate - Sheet1.csv"
 ```
 
 Preview the replacement without touching the database:
 
 ```bash
-pnpm replace:participants -- --dry-run "/absolute/path/to/People receiving a certificate - Sheet1.csv"
+pnpm replace:participants -- --run blockchain-fundamentals-1 --dry-run "/absolute/path/to/People receiving a certificate - Sheet1.csv"
 ```
 
 The replacement script only modifies rows with `certificate_type = 'participant'`.
@@ -80,12 +93,31 @@ Mentor certificates are kept in the same table with `certificate_type = 'mentor'
 Preview the CSV selection without touching the database:
 
 ```bash
-pnpm import:participants -- --dry-run "/absolute/path/to/Cohort_Jan2026_Management_Sheet.xlsx - All Participants NEW.csv"
+pnpm import:participants -- --run blockchain-fundamentals-1 --dry-run "/absolute/path/to/Cohort_Jan2026_Management_Sheet.xlsx - All Participants NEW.csv"
 ```
+
+Preview the exact shortened public names and destinations that are currently
+eligible for an NFT:
+
+```bash
+pnpm export:issuance -- --run blockchain-fundamentals-1 --preview
+```
+
+After review, export a frozen private manifest outside Git:
+
+```bash
+pnpm export:issuance -- --run blockchain-fundamentals-1 --output private/blockchain-fundamentals-1.json
+```
+
+The export resolves `tbc_wallet` preferences to `TBC_CUSTODY_WALLET`, writes the
+manifest with mode `0600`, and writes a SHA-256 sidecar. Do not export until the
+display-name preview has been approved.
 
 ## Checks
 
 ```bash
 pnpm typecheck
+pnpm lint
+pnpm test:scripts
 pnpm build
 ```

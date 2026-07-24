@@ -103,6 +103,10 @@ eligible for an NFT:
 pnpm export:issuance -- --run blockchain-fundamentals-1 --preview
 ```
 
+The exporter rejects names that do not use the reviewed first-name plus
+family-initial format. Full recipient names remain available only to protected
+PDF generation and are never written to the Issuance Manifest.
+
 After review, export a frozen private manifest outside Git:
 
 ```bash

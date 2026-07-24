@@ -1,3 +1,13 @@
+const PUBLIC_DISPLAY_NAME_PATTERN = /^[\p{L}\p{M}'’.-]+(?: [\p{L}\p{M}'’.-]+)* [\p{L}\p{M}]\.$/u;
+
+export function validatePublicDisplayName(value) {
+  const normalized = String(value ?? "").trim();
+  if (!PUBLIC_DISPLAY_NAME_PATTERN.test(normalized)) {
+    throw new Error("Public Display Name must use a reviewed first name and family-name initial.");
+  }
+  return normalized;
+}
+
 export function derivePublicName(fullName) {
   const normalized = String(fullName ?? "").trim().replace(/\s+/g, " ");
   const parts = normalized.split(" ");

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { derivePublicName } from "./names.mjs";
+import { derivePublicName, validatePublicDisplayName } from "./names.mjs";
 
 test("derives the public name from first and final name parts", () => {
   assert.deepEqual(derivePublicName("  Mohamed   Aymane Dhimni "), {
@@ -21,4 +21,12 @@ test("preserves hyphenated and Unicode names", () => {
 
 test("rejects names that cannot be split safely", () => {
   assert.throws(() => derivePublicName("Madonna"), /preferred first name and family name/);
+});
+
+test("accepts reviewed public names and rejects full names", () => {
+  assert.equal(validatePublicDisplayName("Ada L."), "Ada L.");
+  assert.throws(
+    () => validatePublicDisplayName("Ada Lovelace"),
+    /first name and family-name initial/,
+  );
 });

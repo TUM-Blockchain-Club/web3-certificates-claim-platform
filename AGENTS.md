@@ -54,6 +54,9 @@
   name correction so later imports do not replace it.
 - Preview issuance names with `pnpm export:issuance -- --run <id> --preview`
   before exporting a private manifest.
+- Keep the export validator strict: `public_display_name` must use the reviewed
+  first-name plus family-initial format and must never fall back to the full
+  recipient name.
 - Import confirmed `w3t-nfts` receipts with `pnpm import:issuance`; the import is
   checksummed and idempotent by transaction hash.
 - Keep the visual theme and generated PDF aligned with the official TUM Blockchain Club dark violet palette from the website repo: background `#03000b`, accent `#672eb3`, highlight `#c29fff`.

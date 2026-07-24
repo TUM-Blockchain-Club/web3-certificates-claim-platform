@@ -5,6 +5,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import postgres from "postgres";
+import { toIsoDate } from "./lib/dates.mjs";
+import { validatePublicDisplayName } from "./lib/names.mjs";
 
 const EVM_ADDRESS_PATTERN = /^0x[0-9A-Fa-f]{40}$/;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -71,10 +73,14 @@ try {
   if (rows.length === 0) {
     throw new Error(`No mintable Credentials found for ${programRunId}.`);
   }
+  const reviewedRows = rows.map((row) => ({
+    ...row,
+    public_display_name: validatePublicDisplayName(row.public_display_name),
+  }));
 
   if (preview) {
-    console.log(`Mintable Credentials for ${programRunId}: ${rows.length}`);
-    for (const [index, row] of rows.entries()) {
+    console.log(`Mintable Credentials for ${programRunId}: ${reviewedRows.length}`);
+    for (const [index, row] of reviewedRows.entries()) {
       console.log(
         `${String(index + 1).padStart(2, " ")}. ${row.public_display_name} | ${row.credential_type} | ${row.destination_type}`,
       );
@@ -91,7 +97,7 @@ try {
     throw new Error("TBC_CUSTODY_WALLET must be a valid non-zero EVM address.");
   }
 
-  const first = rows[0];
+  const first = reviewedRows[0];
   const manifest = {
     schemaVersion: 1,
     batchId: randomUUID(),
@@ -104,14 +110,14 @@ try {
       id: first.program_run_id,
       label: first.program_run_label,
     },
-    entries: rows.map((row) => ({
+    entries: reviewedRows.map((row) => ({
       certificateId: row.certificate_id,
       certificateName: row.certificate_name,
       credentialType: row.credential_type,
       destinationAddress:
         row.destination_type === "tbc_wallet" ? custodyWallet : row.evm_address,
       destinationType: row.destination_type,
-      issuedOn: String(row.issued_on).slice(0, 10),
+      issuedOn: toIsoDate(row.issued_on),
       publicDisplayName: row.public_display_name,
       verificationUrl: new URL(
         `/verify/${encodeURIComponent(row.certificate_id)}`,

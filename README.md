@@ -16,6 +16,9 @@ Permanent verification domain:
 https://certificates.web3-talents.com
 ```
 
+Issuance documentation boundaries are described in
+`docs/issuance/README.md`; concrete batch status remains local-only.
+
 ## Scope
 
 This application:

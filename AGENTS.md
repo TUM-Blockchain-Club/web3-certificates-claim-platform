@@ -13,6 +13,8 @@
 - `public/certificate-assets/fonts/`: embedded fonts used for generated PDFs.
 - `public/certificate-assets/templates/`: static PDF certificate templates used as the base for generated PDFs.
 - `docs/`: implementation notes for future agents.
+- `docs/issuance/`: privacy-safe batch checksums and operational status. Never
+  include recipient names, emails, Credential IDs, or destination addresses.
 
 ## Shared Schema Contract
 
